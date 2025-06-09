@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": {"item": "create:andesite_alloy"},
+    "C": {"item": "create:cogwheel"},
+    "I": {"item": "ae2:interface"},
+    "B": {"item": "create:brass_casing"}
+  },
+  "pattern": [
+    "BCB",
+    "AIA",
+    "BCB"
+  ],
+  "result": {
+    "item": "schematicenergistics:cannon_interface",
+    "count": 1
+  }
+}

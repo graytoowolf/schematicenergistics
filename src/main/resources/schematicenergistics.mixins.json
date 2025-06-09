@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.schematicenergistics.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8.5",
+  "refmap": "mixins.schematicenergistics.refmap.json",
+  "mixins": [
+    "SchematicCannonMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
