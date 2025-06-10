@@ -1,6 +1,7 @@
 package lib;
 
 import appeng.api.networking.crafting.CalculationStrategy;
+import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingPlan;
 import appeng.api.networking.crafting.ICraftingService;
 import appeng.api.stacks.AEItemKey;
@@ -13,6 +14,7 @@ import java.util.concurrent.Future;
 public class CraftingHelper {
     private CraftingRequest pendingCraft;
     private final CannonInterfaceEntity entity;
+    private ICraftingLink link;
 
     public CraftingHelper(CannonInterfaceEntity entity) {
         this.entity = entity;
@@ -34,6 +36,14 @@ public class CraftingHelper {
 
     public void clearPendingCraft() {
         this.pendingCraft = null;
+    }
+
+    public void setLink(ICraftingLink link) {
+        this.link = link;
+    }
+
+    public ICraftingLink getLink() {
+        return this.link;
     }
 
     public CraftingRequest getPendingCraft() {
