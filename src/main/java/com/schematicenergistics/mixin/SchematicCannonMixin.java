@@ -22,6 +22,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class SchematicCannonMixin {
     @Shadow
     public SchematicannonInventory inventory;
+
+    @Shadow
+    public String statusMsg;
+
     private CannonInterfaceEntity cannonInterface;
 
     @Inject(
@@ -74,13 +78,18 @@ public abstract class SchematicCannonMixin {
             cancellable = true
     )
     protected void tickPrinter(CallbackInfo ci) {
-        if (this.cannonInterface != null) {
-            int currentAmountOnSlot = this.inventory.getStackInSlot(4).getCount();
-            if (currentAmountOnSlot < 64) {
-                int insertedItems = this.cannonInterface.refill(currentAmountOnSlot);
-                ItemStack gunpowderStack = new ItemStack(Items.GUNPOWDER, insertedItems);
-                this.inventory.insertItem(4, gunpowderStack, false);
-            }
-        }
+        if (this.cannonInterface == null) return;
+
+        int maxStackSize = this.inventory.getStackInSlot(4).getMaxStackSize();
+        int currentAmountOnSlot = this.inventory.getStackInSlot(4).getCount();
+        if (currentAmountOnSlot >= maxStackSize) return;
+        int amountToRefill = maxStackSize - currentAmountOnSlot;
+        if (amountToRefill <= 0) return;
+
+        int insertedItems = this.cannonInterface.refill(amountToRefill);
+        if (insertedItems <= 0)  return;
+
+        ItemStack gunpowderStack = new ItemStack(Items.GUNPOWDER, insertedItems);
+        this.inventory.insertItem(4, gunpowderStack, false);
     }
 }

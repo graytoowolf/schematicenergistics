@@ -2,13 +2,8 @@ package lib;
 
 import appeng.api.networking.crafting.CalculationStrategy;
 import appeng.api.networking.crafting.ICraftingLink;
-import appeng.api.networking.crafting.ICraftingPlan;
-import appeng.api.networking.crafting.ICraftingService;
 import appeng.api.stacks.AEItemKey;
 import blockentity.CannonInterfaceEntity;
-import java.util.Objects;
-import java.util.concurrent.Future;
-import net.minecraft.world.level.Level;
 
 public class CraftingHelper {
     private CraftingRequest pendingCraft;
@@ -19,8 +14,8 @@ public class CraftingHelper {
         this.entity = entity;
     }
 
-    public void startCraft(AEItemKey key, long amount) {
-        if (key == null || amount <= 0 || this.entity.getLevel() == null) {
+    public void startCraft(AEItemKey key, long amount, CalculationStrategy strategy) {
+        if (key == null || amount <= 0 || this.entity.getLevel() == null || strategy == null) {
             return;
         }
 
@@ -40,7 +35,7 @@ public class CraftingHelper {
                 entity::getActionSource,
                 key,
                 amount,
-                CalculationStrategy.REPORT_MISSING_ITEMS
+                strategy
         );
 
         if (future != null) {

@@ -2,13 +2,8 @@ package blockentity;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.GridFlags;
-import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.crafting.ICraftingLink;
-import appeng.api.networking.crafting.ICraftingPlan;
-import appeng.api.networking.crafting.ICraftingRequester;
-import appeng.api.networking.crafting.ICraftingService;
-import appeng.api.networking.crafting.ICraftingSubmitResult;
+import appeng.api.networking.crafting.*;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
@@ -21,8 +16,6 @@ import appeng.me.helpers.MachineSource;
 import com.google.common.collect.ImmutableSet;
 import core.Registration;
 import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import lib.CraftingHelper;
 import lib.CraftingRequest;
@@ -82,14 +75,14 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
         }
 
         if (this.craftingHelper.getPendingCraft() == null) {
-            this.craftingHelper.startCraft(what, amount);
+            this.craftingHelper.startCraft(what, amount, CalculationStrategy.REPORT_MISSING_ITEMS);
         }
 
         return false;
     }
 
 
-    public int refill(int currentAmount) {
+    public int refill(int amount) {
         var node = this.getMainNode();
         if (node == null) return 0;
         var grid = node.getGrid();
@@ -98,11 +91,20 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
         AEItemKey gunpowderKey = AEItemKey.of(Items.GUNPOWDER);
         long available = inventory.getAvailableStacks().get(gunpowderKey);
         if (available <= 0) {
+            var canCraft = grid.getCraftingService().isCraftable(gunpowderKey);
+            if (!canCraft) {
+                return 0;
+            }
+            if (this.craftingHelper.getLink() != null || this.craftingHelper.getPendingCraft() != null) {
+                return 0; // Already crafting something, wait for it to finish and try again in the next tick
+            }
+
+            this.craftingHelper.startCraft(gunpowderKey, amount, CalculationStrategy.CRAFT_LESS);
             return 0;
+            // It will always return 0 when it requests a craft.
+            // The exact amount will be extracted in the next tick when the craft is done.
         } else {
-            int amountToFill = 64 - currentAmount;
-            int amountToExtract = (int)Math.min(amountToFill, available);
-            long extracted = inventory.extract(gunpowderKey, amountToExtract, Actionable.MODULATE, this.actionSource);
+            long extracted = inventory.extract(gunpowderKey, amount, Actionable.MODULATE, this.actionSource);
             return (int)extracted;
         }
     }
@@ -141,7 +143,8 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
                             this,
                             null,
                             false,
-                            this.actionSource);
+                            this.actionSource
+                    );
 
                     if (result.successful()) {
                         this.craftingHelper.setLink(result.link());

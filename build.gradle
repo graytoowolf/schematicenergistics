@@ -154,6 +154,8 @@ jar {
     archiveVersion.set(mod_version)      // "1.0.0"
     archiveAppendix.set(minecraft_version)  // "1.21"
     archiveClassifier.set("")
+
+    exclude 'data/schematicenergistics/recipe/gunpowder.json' // Exclude gunpowder recipe - dev env only.
 }
 
 
