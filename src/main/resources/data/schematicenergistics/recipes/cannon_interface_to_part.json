@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "schematicenergistics:cannon_interface"
+    }
+  ],
+  "result": {
+    "item": "schematicenergistics:cannon_interface_part",
+    "count": 1
+  }
+}

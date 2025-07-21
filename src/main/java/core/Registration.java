@@ -1,7 +1,10 @@
 package core;
 
+import appeng.api.parts.PartModels;
 import appeng.block.AEBaseBlock;
 import appeng.blockentity.AEBaseBlockEntity;
+import appeng.items.parts.PartItem;
+import appeng.items.parts.PartModelsHelper;
 import block.CannonInterface;
 import blockentity.CannonInterfaceEntity;
 import blockitem.CannonInterfaceBlockItem;
@@ -15,11 +18,14 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import part.CannonInterfacePart;
+import part.CannonInterfacePartItem;
 
 public class Registration {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, SchematicEnergistics.MOD_ID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, SchematicEnergistics.MOD_ID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, SchematicEnergistics.MOD_ID);
+
 
     public static final RegistryObject<CannonInterface> CANNON_INTERFACE = BLOCKS.register(
             "cannon_interface",
@@ -35,8 +41,25 @@ public class Registration {
                         return type;
                     });
 
+
+
     public static final RegistryObject<BlockItem> CANNON_INTERFACE_ITEM = ITEMS.register("cannon_interface",
             () -> new CannonInterfaceBlockItem(CANNON_INTERFACE.get(), new Item.Properties()));
+
+    public static RegistryObject<Item> CANNON_INTERFACE_PART_ITEM = ITEMS.register(
+            "cannon_interface_part",
+            () -> {
+                PartModels.registerModels(PartModelsHelper.createModels(CannonInterfacePart.class));
+
+                return new CannonInterfacePartItem(
+                        new Item.Properties(),
+                        CannonInterfacePart.class,
+                        CannonInterfacePart::new
+                );
+            }
+    );
+
+
 
     public static void init(IEventBus eventBus) {
         BLOCKS.register(eventBus);

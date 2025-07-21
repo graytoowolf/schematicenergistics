@@ -1,6 +1,7 @@
 ---
 item_ids: 
 - schematicenergistics:cannon_interface
+- schematicenergistics:cannon_interface_part
 ---
 
 # Cannon Interface
@@ -21,8 +22,9 @@ Only one Cannon Interface can be connected to a Schematic Cannon at a time.
 
 The Cannon will ALWAYS priotize items from other inventories before accessing the AE2 network. This means that items from chest, barrels, etc, will be used first.
 
-The Cannon Interface will also export gunpowder from the AE2 network to the Schematic Cannon, if it is connected to the network. However, it will not autocraft it.
+The Cannon Interface will also export gunpowder from the AE2 network to the Schematic Cannon, if it is connected to the network.
 
 ## Recipe
 
-<RecipeFor id="schematicenergistics:cannon_interface" />
+<Recipe id="cannon_interface" />
+<Recipe id="cannon_interface_to_part" />
