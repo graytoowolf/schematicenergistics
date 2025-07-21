@@ -49,7 +49,7 @@ public abstract class SchematicCannonMixin {
             if (be instanceof CannonInterfaceEntity candidateInterface) {
                 var logic = candidateInterface.getLogic();
                 if (logic == null) continue;
-                logicalHost = candidateInterface.getLogic();
+                logicalHost = logic;
                 break;
             } else if (be instanceof IPartHost partHost) {
                 IPart part = partHost.getPart(dir.getOpposite());

@@ -62,7 +62,6 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
                     this.actionSource,
                     this
             );
-            System.out.println("CannonInterfaceLogic initialized for " + this.getHost().getBlockEntity().getBlockPos());
         }
         return this.cannonLogic;
     }

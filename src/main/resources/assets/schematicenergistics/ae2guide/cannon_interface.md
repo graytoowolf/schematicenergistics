@@ -26,4 +26,5 @@ The Cannon Interface will also export gunpowder from the AE2 network to the Sche
 
 ## Recipe
 
-<RecipeFor id="schematicenergistics:cannon_interface" />
+<Recipe id="cannon_interface" />
+<Recipe id="cannon_interface_to_part" />

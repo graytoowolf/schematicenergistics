@@ -24,6 +24,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import part.CannonInterfacePart;
+import part.CannonInterfacePartItem;
 
 public final class Registration {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(SchematicEnergistics.MOD_ID);
@@ -58,7 +59,7 @@ public final class Registration {
                 "cannon_interface_part", properties -> {
                     PartModels.registerModels(PartModelsHelper.createModels(CannonInterfacePart.class));
 
-                    return new PartItem<>(
+                    return new CannonInterfacePartItem(
                             properties,
                             CannonInterfacePart.class,
                             CannonInterfacePart::new
