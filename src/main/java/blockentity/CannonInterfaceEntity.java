@@ -20,16 +20,22 @@ import java.util.concurrent.ExecutionException;
 import lib.CraftingHelper;
 import lib.CraftingRequest;
 import logic.CannonInterfaceLogic;
+import menu.CannonInterfaceMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGridTickable, ICraftingRequester {
+public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGridTickable, ICraftingRequester, MenuProvider {
     private @Nullable CannonInterfaceLogic cannonLogic = null;
     private final IActionSource actionSource;
 
@@ -100,5 +106,16 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
     @Override
     public TickRateModulation tickingRequest(IGridNode node, int ticksSinceLastCall) {
         return this.getLogic().tickingRequest(node, ticksSinceLastCall);
+    }
+
+    @Nullable
+    @Override
+    public AbstractContainerMenu createMenu(int i, Inventory inventory, Player player) {
+        return new CannonInterfaceMenu(i, inventory, this);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.literal("Cannon Interface");
     }
 }

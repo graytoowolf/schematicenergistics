@@ -13,9 +13,12 @@ import net.neoforged.fml.common.EventBusSubscriber.Bus;
 import net.neoforged.fml.config.ModConfig.Type;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import screen.CannonInterfaceScreen;
 import tab.CreativeTab;
 
 @Mod(SchematicEnergistics.MOD_ID)
@@ -29,12 +32,19 @@ public class SchematicEnergistics {
         Registration.init(modEventBus);
         CreativeTab.register(modEventBus);
         modContainer.registerConfig(Type.COMMON, Config.SPEC);
+
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            modEventBus.addListener(this::registerScreens);
+        }
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {}
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {}
 
+    private void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(Registration.CANNON_INTERFACE_MENU.get(), CannonInterfaceScreen::new);
+    }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {}

@@ -12,13 +12,17 @@ import block.CannonInterface;
 import blockentity.CannonInterfaceEntity;
 import blockitem.CannonInterfaceBlockItem;
 import com.schematicenergistics.SchematicEnergistics;
+import menu.CannonInterfaceMenu;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.inventory.MenuConstructor;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.BlockEntityType.Builder;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -33,7 +37,9 @@ public final class Registration {
     public static final DeferredBlock<CannonInterface> CANNON_INTERFACE;
     public static final DeferredItem<BlockItem> CANNON_INTERFACE_ITEM;
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CannonInterfaceEntity>> CANNON_INTERFACE_ENTITY;
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, SchematicEnergistics.MOD_ID);
     public static DeferredItem<PartItem<CannonInterfacePart>> CANNON_INTERFACE_PART_ITEM;
+    public static final DeferredHolder<MenuType<?>, MenuType<CannonInterfaceMenu>> CANNON_INTERFACE_MENU;
 
     private static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(
@@ -47,6 +53,7 @@ public final class Registration {
         BLOCKS.register(eventBus);
         ITEMS.register(eventBus);
         BLOCK_ENTITIES.register(eventBus);
+        MENUS.register(eventBus);
 
         eventBus.addListener(Registration::registerCapabilities);
     }
@@ -72,5 +79,7 @@ public final class Registration {
             CANNON_INTERFACE.get().setBlockEntity(CannonInterfaceEntity.class, type, null, null);
             return type;
         });
+
+        CANNON_INTERFACE_MENU = MENUS.register("cannon_interface", () -> IMenuTypeExtension.create(CannonInterfaceMenu::new));
     }
 }
