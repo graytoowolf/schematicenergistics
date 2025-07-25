@@ -3,6 +3,7 @@ package com.schematicenergistics;
 import appeng.api.ids.AECreativeTabIds;
 import appeng.init.client.InitScreens;
 import core.Registration;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -19,6 +20,7 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import network.PacketHandler;
 import screen.CannonInterfaceScreen;
 import tab.CreativeTab;
 
@@ -32,11 +34,16 @@ public class SchematicEnergistics {
         modEventBus.addListener(this::addCreative);
         Registration.init(modEventBus);
         CreativeTab.register(modEventBus);
+        PacketHandler.init(modEventBus);
         modContainer.registerConfig(Type.COMMON, Config.SPEC);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modEventBus.addListener(this::registerScreens);
         }
+    }
+
+    public static ResourceLocation makeId(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {}

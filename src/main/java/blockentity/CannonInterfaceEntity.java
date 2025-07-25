@@ -8,30 +8,20 @@ import appeng.api.networking.security.IActionSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
-import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
-import appeng.api.storage.MEStorage;
 import appeng.blockentity.grid.AENetworkedBlockEntity;
 import appeng.me.helpers.MachineSource;
 import com.google.common.collect.ImmutableSet;
 import core.Registration;
 import java.util.EnumSet;
-import java.util.concurrent.ExecutionException;
-import lib.CraftingHelper;
-import lib.CraftingRequest;
 import logic.CannonInterfaceLogic;
 import logic.ICannonInterfaceHost;
-import menu.CannonInterfaceMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -62,18 +52,24 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
 
     public void onReady() {
         this.getMainNode().setExposedOnSides(this.getExposedSides());
-        if (this.cannonLogic == null && this.getLevel() != null) {
-            this.cannonLogic = new CannonInterfaceLogic(
-                    this.getLevel(),
-                    this.getMainNode(),
-                    this.actionSource,
-                this);
-        }
         super.onReady();
     }
 
     private EnumSet<Direction> getExposedSides() {
         return EnumSet.allOf(Direction.class);
+    }
+
+    @Override
+    public void setLevel(Level level) {
+        super.setLevel(level);
+        if (this.cannonLogic == null && this.getLevel() != null) {
+            this.cannonLogic = new CannonInterfaceLogic(
+                    this.getLevel(),
+                    this.getMainNode(),
+                    this.actionSource,
+                    this
+                    );
+        }
     }
 
     public CannonInterfaceLogic getLogic() {

@@ -4,6 +4,17 @@
     "common/common.json",
     "common/player_inventory.json"
   ],
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "gui.schematicenergistics.cannon_interface.title"
+      },
+      "position": {
+        "left": 8,
+        "top": 5
+      }
+    }
+  },
   "background": {
     "texture": "guis/cannon_interface_bg.png",
     "srcRect": [0, 0, 176, 182]

@@ -1,16 +1,12 @@
 package block;
 
 import appeng.block.AEBaseEntityBlock;
-import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
 import appeng.util.InteractionUtil;
 import blockentity.CannonInterfaceEntity;
 import core.Registration;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;

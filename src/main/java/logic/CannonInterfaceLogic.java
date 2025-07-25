@@ -1,8 +1,6 @@
 package logic;
 
-
 import appeng.api.config.Actionable;
-import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.IManagedGridNode;
 import appeng.api.networking.crafting.CalculationStrategy;
@@ -10,24 +8,19 @@ import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingPlan;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.security.IActionSource;
-import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
-import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.MEStorage;
-import appeng.me.helpers.MachineSource;
 import com.google.common.collect.ImmutableSet;
 import lib.CraftingHelper;
-import lib.CraftingRequest;
-import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.EnumSet;
 import java.util.concurrent.ExecutionException;
+
 
 public class CannonInterfaceLogic {
     private final Level level;
@@ -36,6 +29,8 @@ public class CannonInterfaceLogic {
     private final IActionSource actionSource;
     private final CraftingHelper gunpowderCraftingHelper;
     private ICraftingRequester requester;
+    private AEItemKey item = AEItemKey.of(ItemStack.EMPTY);
+
 
     public CannonInterfaceLogic(Level level, IManagedGridNode node, IActionSource actionSource, ICraftingRequester requester) {
         this.level = level;
@@ -85,7 +80,6 @@ public class CannonInterfaceLogic {
         }
     }
 
-
     public boolean request(AEItemKey what, long amount, boolean simulate) {
         if (node == null) return false;
 
@@ -95,6 +89,8 @@ public class CannonInterfaceLogic {
         var inventory = grid.getStorageService().getInventory();
         var craftingService = grid.getCraftingService();
         if (inventory == null || craftingService == null) return false;
+
+        this.item = what;
 
         long available = inventory.getAvailableStacks().get(what);
         if (available >= amount) {
@@ -195,6 +191,10 @@ public class CannonInterfaceLogic {
                 helper.clearPendingCraft();
             }
         }
+    }
+
+    public AEItemKey getItem() {
+        return this.item;
     }
 
     public IActionSource getActionSource() {

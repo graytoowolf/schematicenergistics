@@ -16,6 +16,7 @@ import appeng.api.stacks.AEKey;
 import appeng.core.AppEng;
 import appeng.items.parts.PartModels;
 import appeng.me.helpers.MachineSource;
+import appeng.menu.locator.MenuLocators;
 import appeng.parts.AEBasePart;
 import appeng.parts.PartModel;
 import com.google.common.collect.ImmutableSet;
@@ -23,6 +24,8 @@ import com.schematicenergistics.SchematicEnergistics;
 import logic.CannonInterfaceLogic;
 import logic.ICannonInterfaceHost;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 
@@ -42,7 +45,7 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
     private static final IPartModel MODEL_BASE = new PartModel(AppEng.makeId("part/interface_base"));
 
     @PartModels
-    private static final ResourceLocation MODEL_INTERFACE = ResourceLocation.fromNamespaceAndPath(SchematicEnergistics.MOD_ID, "part/cannon_interface");
+    private static final ResourceLocation MODEL_INTERFACE = SchematicEnergistics.makeId("part/cannon_interface");
 
 
     @Override
@@ -62,6 +65,14 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
             );
         }
         return this.cannonLogic;
+    }
+
+    @Override
+    public boolean onUseWithoutItem(Player player, Vec3 pos) {
+        if (!player.getCommandSenderWorld().isClientSide()) {
+            this.openMenu(player, MenuLocators.forPart(this));
+        }
+        return true;
     }
 
     @Override
