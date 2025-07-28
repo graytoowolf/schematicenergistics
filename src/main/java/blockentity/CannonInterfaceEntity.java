@@ -31,8 +31,9 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
     private @Nullable CannonInterfaceLogic cannonLogic = null;
     private final IActionSource actionSource;
 
-    private boolean gunpowderState = true; // default
+    private boolean gunpowderCraftingState = true; // default
     private boolean craftingState = true;
+    private boolean gunpowderState = true;
 
     public CannonInterfaceEntity(BlockPos pos, BlockState state) {
         this(Registration.CANNON_INTERFACE_ENTITY.get(), pos, state);
@@ -50,12 +51,14 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
         super.saveAdditional(tag, registries);
         tag.putBoolean("gunpowderState", this.gunpowderState);
         tag.putBoolean("craftingState", this.craftingState);
+        tag.putBoolean("gunpowderCraftingState", this.gunpowderCraftingState);
     }
 
     public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadTag(tag, registries);
         this.gunpowderState = tag.getBoolean("gunpowderState");
         this.craftingState = tag.getBoolean("craftingState");
+        this.gunpowderCraftingState = tag.getBoolean("gunpowderCraftingState");
     }
 
     public void onReady() {
@@ -121,7 +124,9 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
 
     @Override
     public TickRateModulation tickingRequest(IGridNode node, int ticksSinceLastCall) {
-        System.out.println("gunpowder: " + this.gunpowderState + ", crafting: " + this.craftingState);
+//        System.out.println("craftingState: " + this.craftingState);
+//        System.out.println("gunpowderState: " + this.gunpowderState);
+//        System.out.println("gunpowderCraftingState: " + this.gunpowderCraftingState);
         return this.getLogic().tickingRequest(node, ticksSinceLastCall);
     }
 
@@ -131,12 +136,16 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
     }
 
     public void setConfigState(String type, boolean state) {
+        System.out.println(type);
         switch (type) {
             case "gunpowderState":
                 this.gunpowderState = state;
                 break;
             case "craftingState":
                 this.craftingState = state;
+                break;
+            case "gunpowderCraftingState":
+                this.gunpowderCraftingState = state;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown config type: " + type);
@@ -148,6 +157,7 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
         return switch (type) {
             case "gunpowderState" -> this.gunpowderState;
             case "craftingState" -> this.craftingState;
+            case "gunpowderCraftingState" -> this.gunpowderCraftingState;
             default -> throw new IllegalArgumentException("Unknown config type: " + type);
         };
     }

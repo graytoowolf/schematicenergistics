@@ -10,12 +10,13 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import screen.CannonInterfaceScreen;
 
-public record CannonInterfaceConfigClientPacket(boolean gunpowderState, boolean craftingState) implements CustomPacketPayload {
+public record CannonInterfaceConfigClientPacket(boolean gunpowderState, boolean craftingState, boolean gunpowderCraftingState) implements CustomPacketPayload {
     public static final Type<CannonInterfaceConfigClientPacket> TYPE = new Type<>(SchematicEnergistics.makeId("cannon_state"));
 
     public static final StreamCodec<ByteBuf, CannonInterfaceConfigClientPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.BOOL, CannonInterfaceConfigClientPacket::gunpowderState,
             ByteBufCodecs.BOOL, CannonInterfaceConfigClientPacket::craftingState,
+            ByteBufCodecs.BOOL, CannonInterfaceConfigClientPacket::gunpowderCraftingState,
             CannonInterfaceConfigClientPacket::new
     );
 
@@ -27,9 +28,9 @@ public record CannonInterfaceConfigClientPacket(boolean gunpowderState, boolean 
     public static void handle(CannonInterfaceConfigClientPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             var minecraft = Minecraft.getInstance();
-            CannonInterfaceClientState.setState(packet.gunpowderState(), packet.craftingState());
+            CannonInterfaceClientState.setState(packet.gunpowderState(), packet.craftingState(), packet.gunpowderCraftingState());
             if (minecraft.screen instanceof CannonInterfaceScreen screen) {
-                screen.updateStates(packet.gunpowderState(), packet.craftingState());
+                screen.updateStates(packet.gunpowderState(), packet.craftingState(), packet.gunpowderCraftingState());
             }
         });
     }

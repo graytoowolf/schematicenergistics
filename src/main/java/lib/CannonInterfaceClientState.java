@@ -3,11 +3,13 @@ package lib;
 public class CannonInterfaceClientState {
     private static boolean gunpowderState = false;
     private static boolean craftingState = false;
+    private static boolean gunpowderCraftingState = false;
     private static boolean received = false;
 
-    public static void setState(boolean gunpowder, boolean crafting) {
+    public static void setState(boolean gunpowder, boolean crafting, boolean gunpowderCrafting) {
         gunpowderState = gunpowder;
         craftingState = crafting;
+        gunpowderCraftingState = gunpowderCrafting;
         received = true;
     }
 
@@ -21,6 +23,10 @@ public class CannonInterfaceClientState {
 
     public static boolean getCraftingState() {
         return craftingState;
+    }
+
+    public static boolean getGunpowderCraftingState() {
+        return gunpowderCraftingState;
     }
 
     public static void reset() {

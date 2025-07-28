@@ -41,10 +41,12 @@ public class CannonInterfaceMenu extends AEBaseMenu {
         if (getPlayer() instanceof ServerPlayer player) {
             boolean currentGunpowderState = getGunpowderState();
             boolean currentCraftingState = getCraftingState();
+            boolean currentGunpowderCraftingState = getGunpowderCraftingState();
             PacketDistributor.sendToPlayer(player,
                     new CannonInterfaceConfigClientPacket(
                             currentGunpowderState,
-                            currentCraftingState
+                            currentCraftingState,
+                            currentGunpowderCraftingState
                     )
             );
 
@@ -86,6 +88,18 @@ public class CannonInterfaceMenu extends AEBaseMenu {
             return entity.getConfigState("craftingState");
         } else if (part != null) {
 //            return part.getConfigState("craftingState");
+        }
+        return false;
+    }
+
+    public boolean getGunpowderCraftingState() {
+        var entity = this.getHost().getEntity();
+        var part = this.getHost().getPart();
+
+        if (entity != null) {
+            return entity.getConfigState("gunpowderCraftingState");
+        } else if (part != null) {
+            //
         }
         return false;
     }

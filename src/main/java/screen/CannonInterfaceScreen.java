@@ -16,12 +16,14 @@ import widgets.SEToggleButton;
 
 public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
     private AEItemKey item;
-    private SEToggleButton toggleGunpowder;
+    private SEToggleButton toggleGunpowderCrafting;
     private SEToggleButton toggleCrafting;
+    private SEToggleButton toggleGunpowder;
     private String schematicName;
 
     private boolean craftingState;
     private boolean gunpowderState;
+    private boolean gunpowderCraftingState;
 
 
     public CannonInterfaceScreen(CannonInterfaceMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
@@ -39,16 +41,17 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         if (CannonInterfaceClientState.hasState()) {
             this.gunpowderState = CannonInterfaceClientState.getGunpowderState();
             this.craftingState = CannonInterfaceClientState.getCraftingState();
+            this.gunpowderCraftingState = CannonInterfaceClientState.getGunpowderCraftingState();
             CannonInterfaceClientState.reset();
         }
 
         this.toggleCrafting = new SEToggleButton(
                 SEIcon.CRAFTING_ALLOW,
                 SEIcon.CRAFTING_DENY,
-                Component.literal("Disable auto crafting"),
-                Component.literal("Cannon will no longer craft items"),
-                Component.literal("Enable auto crafting"),
-                Component.literal("Cannon will craft items"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.disable_autocraft"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.disable_autocraft_hint"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.enable_autocraft"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.enable_autocraft_hint"),
                 state -> {
                     sendState("craftingState", state);
                 },
@@ -56,20 +59,42 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         );
 
         this.toggleGunpowder = new SEToggleButton(
-                SEIcon.GUNPOWDER_ALLOW,
+                SEIcon.GUNPOWDER,
                 SEIcon.GUNPOWDER_DENY,
-                Component.literal("Toggle"),
-                Component.literal("Toggle the state"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.disable_gunpowder"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.disable_gunpowder_hint"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.enable_gunpowder"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.enable_gunpowder_hint"),
                 state -> {
                     sendState("gunpowderState", state);
                 },
                 gunpowderState
         );
 
-        this.toggleGunpowder.setPosition(centerX + 16,  this.topPos + 144 / 2 - 8);
-        this.toggleCrafting.setPosition(centerX - 16,  this.topPos + 144 / 2 - 8);
+        this.toggleGunpowderCrafting = new SEToggleButton(
+                SEIcon.GUNPOWDER_ALLOW,
+                SEIcon.GUNPOWDER_DENY,
+                Component.translatable("gui.schematicenergistics.cannon_interface.disable_gunpowder_crafting"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.disable_gunpowder_crafting_hint"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.enable_gunpowder_crafting"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.enable_gunpowder_crafting_hint"),
+                state -> {
+                    sendState("gunpowderCraftingState", state);
+                },
+                gunpowderCraftingState
+        );
+
+
+//        this.toggleGunpowder.setPosition(centerX + 16,  this.topPos + 144 / 2 - 8);
+//        this.toggleCrafting.setPosition(centerX - 16,  this.topPos + 144 / 2 - 8);
+
+        this.toggleCrafting.setPosition(this.leftPos + this.imageWidth,  this.topPos);
+        this.toggleGunpowder.setPosition(this.leftPos + this.imageWidth,  this.topPos + 24);
+        this.toggleGunpowderCrafting.setPosition(this.leftPos + this.imageWidth,  this.topPos + 48);
+
         this.addRenderableWidget(toggleCrafting);
         this.addRenderableWidget(toggleGunpowder);
+        this.addRenderableWidget(toggleGunpowderCrafting);
     }
 
     public void sendState(String config, boolean state) {
@@ -100,7 +125,7 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         }
     }
 
-    public void updateStates(boolean gunpowderState, boolean craftingState) {
+    public void updateStates(boolean gunpowderState, boolean craftingState, boolean gunpowderCraftingState) {
         this.gunpowderState = gunpowderState;
         this.craftingState = craftingState;
 
@@ -109,6 +134,9 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         }
         if (this.toggleCrafting != null) {
             this.toggleCrafting.setState(craftingState);
+        }
+        if (this.toggleGunpowderCrafting != null) {
+            this.toggleGunpowderCrafting.setState(gunpowderCraftingState);
         }
     }
 
