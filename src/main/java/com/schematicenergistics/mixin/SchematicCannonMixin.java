@@ -11,9 +11,6 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import logic.CannonInterfaceLogic;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -26,14 +23,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import part.CannonInterfacePart;
 
-import java.util.stream.Stream;
-
-import static java.lang.System.out;
-
 @Mixin({SchematicannonBlockEntity.class})
 public abstract class SchematicCannonMixin {
     @Shadow
     public SchematicannonInventory inventory;
+
+    @Shadow
+    public ItemStack missingItem;
 
     private CannonInterfaceLogic cannonInterface;
 
@@ -81,6 +77,7 @@ public abstract class SchematicCannonMixin {
         if (!cir.getReturnValue()) {
             if (this.cannonInterface != null) {
                 AEItemKey key = AEItemKey.of(required.stack);
+                this.cannonInterface.setItem(key);
                 long neededCount = required.stack.getCount();
                 boolean result = this.cannonInterface.request(key, neededCount, simulate);
                 cir.setReturnValue(result);
@@ -95,10 +92,19 @@ public abstract class SchematicCannonMixin {
     )
     protected void tickPrinter(CallbackInfo ci) {
         if (this.cannonInterface == null) return;
-
         var blueprint = inventory.getStackInSlot(0);
         if (!blueprint.isEmpty()) {
             this.cannonInterface.setSchematicName(blueprint.get(AllDataComponents.SCHEMATIC_FILE));
+        } else {
+            this.cannonInterface.setSchematicName(null);
+            this.cannonInterface.setItem(null);
+        }
+
+        if (missingItem != null) {
+            var key = AEItemKey.of(missingItem);
+            if (key != this.cannonInterface.getItem()) {
+                this.cannonInterface.setItem(key);
+            }
         }
 
         int maxStackSize = this.inventory.getStackInSlot(4).getMaxStackSize();

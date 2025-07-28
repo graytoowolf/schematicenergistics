@@ -94,8 +94,6 @@ public class CannonInterfaceLogic {
         var craftingService = grid.getCraftingService();
         if (inventory == null || craftingService == null) return false;
 
-        this.item = what;
-
         long available = inventory.getAvailableStacks().get(what);
         if (available >= amount) {
             if (!simulate) {
@@ -142,6 +140,10 @@ public class CannonInterfaceLogic {
             long extracted = inventory.extract(gunpowderKey, amount, Actionable.MODULATE, this.actionSource);
             return (int)extracted;
         }
+    }
+
+    public void setItem(AEItemKey item) {
+        this.item = item;
     }
 
     public @Nullable IGridNode getActionableNode() {
@@ -203,7 +205,6 @@ public class CannonInterfaceLogic {
     public String getSchematicName() {
         return this.schematicName;
     }
-
 
     public AEItemKey getItem() {
         return this.item;

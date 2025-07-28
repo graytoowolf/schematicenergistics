@@ -5,6 +5,7 @@ import appeng.menu.AEBaseMenu;
 import core.Registration;
 import logic.CannonInterfaceLogic;
 import logic.ICannonInterfaceHost;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -15,6 +16,9 @@ import network.payloads.CannonInterfaceSyncPacket;
 public class CannonInterfaceMenu extends AEBaseMenu {
     private AEItemKey clientItem;
     private ICannonInterfaceHost host;
+
+    private AEItemKey lastItem;
+    private String lastSchematicName;
 
     public CannonInterfaceMenu(int id, Inventory playerInventory, ICannonInterfaceHost host) {
         super(Registration.CANNON_INTERFACE_MENU.get(), id, playerInventory, host);
@@ -107,14 +111,20 @@ public class CannonInterfaceMenu extends AEBaseMenu {
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
-        if (getPlayer() instanceof ServerPlayer player) {
-            if (this.getLogic() == null || this.getLogic().getItem() == null) return;
-           this.clientItem = this.getLogic().getItem();
+        if (getPlayer() instanceof ServerPlayer player && getLogic() != null) {
+            this.clientItem = getLogic().getItem();
 
-           PacketDistributor.sendToPlayer(player,
-                   new CannonInterfaceSyncPacket(clientItem.toTag(getLogic().getLevel().registryAccess()),
-                   this.getLogic().getSchematicName()
-           ));
+            PacketDistributor.sendToPlayer(player,
+                    new CannonInterfaceSyncPacket(
+                            clientItem != null && !clientItem.toStack().isEmpty()
+                                    ? clientItem.toTag(getLogic().getLevel().registryAccess())
+                                    : new CompoundTag(),
+                            getLogic().getSchematicName() != null && !getLogic().getSchematicName().isEmpty()
+                                    ? getLogic().getSchematicName()
+                                    : ""
+                    )
+            );
         }
     }
+
 }
