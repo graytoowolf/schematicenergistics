@@ -1,0 +1,42 @@
+{
+  "$schema": "schema.json",
+  "includes": [
+    "common/common.json",
+    "common/player_inventory.json"
+  ],
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "gui.schematicenergistics.cannon_interface.title"
+      },
+      "position": {
+        "left": 8,
+        "top": 5
+      }
+    },
+    "schematic_text": {
+      "text": {
+        "translate": "gui.schematicenergistics.cannon_interface.schematic_name"
+      },
+      "position": {
+        "left": 12,
+        "top": 22
+      },
+      "scale": 0.8
+    },
+    "status_text": {
+      "text": {
+        "translate": "gui.schematicenergistics.cannon_interface.cannon_status"
+      },
+      "position": {
+        "left": 12,
+        "top": 32
+      },
+      "scale": 0.8
+    }
+  },
+  "background": {
+    "texture": "guis/cannon_interface_bg.png",
+    "srcRect": [0, 0, 176, 182]
+  }
+}

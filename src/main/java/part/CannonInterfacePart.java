@@ -16,17 +16,28 @@ import appeng.api.stacks.AEKey;
 import appeng.core.AppEng;
 import appeng.items.parts.PartModels;
 import appeng.me.helpers.MachineSource;
+import appeng.menu.locator.MenuLocators;
 import appeng.parts.AEBasePart;
 import appeng.parts.PartModel;
+import blockentity.CannonInterfaceEntity;
 import com.google.common.collect.ImmutableSet;
 import com.schematicenergistics.SchematicEnergistics;
 import logic.CannonInterfaceLogic;
+import logic.ICannonInterfaceHost;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-public class CannonInterfacePart extends AEBasePart implements IGridTickable, ICraftingRequester {
+public class CannonInterfacePart extends AEBasePart implements IGridTickable, ICraftingRequester, ICannonInterfaceHost {
     private @Nullable CannonInterfaceLogic cannonLogic = null;
     private final IActionSource actionSource;
+
+    private boolean gunpowderCraftingState = true; // default
+    private boolean craftingState = true;
+    private boolean gunpowderState = true;
 
     public CannonInterfacePart(IPartItem<?> partItem) {
         super(partItem);
@@ -49,6 +60,31 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
         bch.addBox(5.0, 5.0, 12.0, 11.0, 11.0, 14.0);
     }
 
+    @Override
+    public boolean onPartActivate(Player player, InteractionHand hand, Vec3 pos) {
+        if (!player.getCommandSenderWorld().isClientSide()) {
+            this.openMenu(player, MenuLocators.forPart(this));
+        }
+
+        return true;
+    }
+
+    @Override
+    public void writeToNBT(CompoundTag data) {
+        super.writeToNBT(data);
+        data.putBoolean("gunpowderState", this.gunpowderState);
+        data.putBoolean("craftingState", this.craftingState);
+        data.putBoolean("gunpowderCraftingState", this.gunpowderCraftingState);
+    }
+
+    @Override
+    public void readFromNBT(CompoundTag data) {
+        super.readFromNBT(data);
+        this.gunpowderState = data.getBoolean("gunpowderState");
+        this.craftingState = data.getBoolean("craftingState");
+        this.gunpowderCraftingState = data.getBoolean("gunpowderCraftingState");
+    }
+
     public CannonInterfaceLogic getLogic() {
         // Lazy initialization
         if (this.cannonLogic == null && this.getHost() != null && this.getHost().getBlockEntity().getLevel() != null) {
@@ -58,8 +94,57 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
                     this.actionSource,
                     this
             );
+
+            this.cannonLogic.setCraftingState(this.craftingState);
+            this.cannonLogic.setGunpowderState(this.gunpowderState);
+            this.cannonLogic.setGunpowderCraftingState(this.gunpowderCraftingState);
         }
         return this.cannonLogic;
+    }
+
+    @Override
+    public @Nullable CannonInterfaceEntity getEntity() {
+        return null;
+    }
+
+    @Override
+    public @Nullable CannonInterfacePart getPart() {
+        return this;
+    }
+
+    public void setConfigState(String type, boolean state) {
+        switch (type) {
+            case "gunpowderState":
+                this.gunpowderState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setGunpowderState(state);
+                }
+                break;
+            case "craftingState":
+                this.craftingState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setCraftingState(state);
+                }
+                break;
+            case "gunpowderCraftingState":
+                this.gunpowderCraftingState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setGunpowderCraftingState(state);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown config type: " + type);
+        }
+        this.getHost().markForSave();
+    }
+
+    public boolean getConfigState(String type) {
+        return switch (type) {
+            case "gunpowderState" -> this.gunpowderState;
+            case "craftingState" -> this.craftingState;
+            case "gunpowderCraftingState" -> this.gunpowderCraftingState;
+            default -> throw new IllegalArgumentException("Unknown config type: " + type);
+        };
     }
 
     @Override

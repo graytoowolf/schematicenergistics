@@ -26,7 +26,29 @@ import part.CannonInterfacePart;
 public abstract class SchematicCannonMixin {
     @Shadow
     public SchematicannonInventory inventory;
+
     private CannonInterfaceLogic cannonInterface;
+
+    @Shadow
+    public ItemStack missingItem;
+
+    @Shadow
+    public SchematicannonBlockEntity.State state;
+
+    @Shadow
+    public String statusMsg;
+
+    @Inject(
+            method = {"initializePrinter"},
+            at = {@At("HEAD")},
+            cancellable = true,
+            remap = false
+    )
+    protected void initializePrinter(CallbackInfo ci) {
+        if (this.cannonInterface != null) {
+            this.cannonInterface.setLinkedCannon((SchematicannonBlockEntity)(Object) this);
+        }
+    }
 
     @Inject(
             method = {"findInventories"},
@@ -88,6 +110,23 @@ public abstract class SchematicCannonMixin {
     )
     protected void tickPrinter(CallbackInfo ci) {
         if (this.cannonInterface == null) return;
+
+        var blueprint = inventory.getStackInSlot(0);
+        this.cannonInterface.setStatusMsg(statusMsg);
+        this.cannonInterface.setState(state.toString());
+        if (!blueprint.isEmpty() && blueprint.getTag() != null) {
+            this.cannonInterface.setSchematicName(blueprint.getTag().getString("schematic_file"));
+        } else {
+            this.cannonInterface.setSchematicName(null);
+            this.cannonInterface.setItem(null);
+        }
+
+        if (missingItem != null) {
+            var key = AEItemKey.of(missingItem);
+            if (key != this.cannonInterface.getItem()) {
+                this.cannonInterface.setItem(key);
+            }
+        }
 
         int maxStackSize = this.inventory.getStackInSlot(4).getMaxStackSize();
         int currentAmountOnSlot = this.inventory.getStackInSlot(4).getCount();

@@ -15,9 +15,12 @@ import appeng.api.stacks.AEKey;
 import appeng.api.storage.MEStorage;
 import appeng.core.settings.TickRates;
 import com.google.common.collect.ImmutableSet;
+import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity;
 import lib.CraftingHelper;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.ExecutionException;
@@ -25,10 +28,23 @@ import java.util.concurrent.ExecutionException;
 public class CannonInterfaceLogic {
     private final Level level;
     private final IManagedGridNode node;
+
     private final CraftingHelper craftingHelper;
     private final IActionSource actionSource;
     private final CraftingHelper gunpowderCraftingHelper;
+
     private ICraftingRequester requester;
+
+    private AEItemKey item = AEItemKey.of(ItemStack.EMPTY);
+    private String schematicName = "";
+    private String statusMsg = "";
+    private String state = "";
+
+    private boolean gunpowderCraftingState = true;
+    private boolean craftingState = true;
+    private boolean gunpowderState = true;
+
+    private SchematicannonBlockEntity cannonEntity;
 
     public CannonInterfaceLogic(Level level, IManagedGridNode node, IActionSource actionSource, ICraftingRequester requester) {
         this.level = level;
@@ -97,6 +113,8 @@ public class CannonInterfaceLogic {
             return true;
         }
 
+        if (!this.craftingState) return false;
+
         if (this.craftingHelper.getLink() != null) {
             return false;
         }
@@ -113,6 +131,7 @@ public class CannonInterfaceLogic {
 
 
     public int refill(int amount) {
+        if (!this.gunpowderState) return 0;
         if (node == null) return 0;
         var grid = node.getGrid();
         if (grid == null) return 0;
@@ -120,6 +139,7 @@ public class CannonInterfaceLogic {
         AEItemKey gunpowderKey = AEItemKey.of(Items.GUNPOWDER);
         long available = inventory.getAvailableStacks().get(gunpowderKey);
         if (available <= 0) {
+            if (!this.gunpowderCraftingState) return 0;
             var canCraft = grid.getCraftingService().isCraftable(gunpowderKey);
             if (!canCraft) {
                 return 0;
@@ -190,6 +210,54 @@ public class CannonInterfaceLogic {
         }
     }
 
+    public void sendSchematicannonState(String state) {
+        BlockEntity be = this.getLinkedCannon();
+        if (be instanceof SchematicannonBlockEntity cannonEntity) {
+            cannonEntity.state = SchematicannonBlockEntity.State.valueOf(state.toUpperCase());
+            cannonEntity.setChanged();
+        }
+    }
+
+    public void setSchematicName(String name) {
+        this.schematicName = name;
+    }
+
+    public String getSchematicName() {
+        return this.schematicName;
+    }
+
+    public AEItemKey getItem() {
+        return this.item;
+    }
+
+    public void setLinkedCannon(SchematicannonBlockEntity entity) {
+        this.cannonEntity = entity;
+    }
+
+    public SchematicannonBlockEntity getLinkedCannon() {
+        return this.cannonEntity;
+    }
+
+    public void setItem(AEItemKey item) {
+        this.item = item;
+    }
+
+    public void setStatusMsg(String statusMsg) {
+        this.statusMsg = statusMsg;
+    }
+
+    public String getStatusMsg() {
+        return this.statusMsg;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getState() {
+        return this.state;
+    }
+
     public IActionSource getActionSource() {
         return this.actionSource;
     }
@@ -200,5 +268,29 @@ public class CannonInterfaceLogic {
 
     public IManagedGridNode getGridNode() {
         return this.node;
+    }
+
+    public void setGunpowderState(boolean state) {
+        this.gunpowderState = state;
+    }
+
+    public boolean getGunpowderState() {
+        return this.gunpowderState;
+    }
+
+    public void setCraftingState(boolean state) {
+        this.craftingState = state;
+    }
+
+    public boolean getCraftingState() {
+        return this.craftingState;
+    }
+
+    public void setGunpowderCraftingState(boolean state) {
+        this.gunpowderCraftingState = state;
+    }
+
+    public boolean getGunpowderCraftingState() {
+        return this.gunpowderCraftingState;
     }
 }

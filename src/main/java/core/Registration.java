@@ -5,10 +5,17 @@ import appeng.block.AEBaseBlock;
 import appeng.blockentity.AEBaseBlockEntity;
 import appeng.items.parts.PartItem;
 import appeng.items.parts.PartModelsHelper;
+import appeng.menu.implementations.MenuTypeBuilder;
 import block.CannonInterface;
 import blockentity.CannonInterfaceEntity;
 import blockitem.CannonInterfaceBlockItem;
 import com.schematicenergistics.SchematicEnergistics;
+import logic.ICannonInterfaceHost;
+import menu.CannonInterfaceMenu;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -18,6 +25,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import network.PacketHandler;
 import part.CannonInterfacePart;
 import part.CannonInterfacePartItem;
 
@@ -25,6 +33,7 @@ public class Registration {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, SchematicEnergistics.MOD_ID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, SchematicEnergistics.MOD_ID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, SchematicEnergistics.MOD_ID);
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, SchematicEnergistics.MOD_ID);
 
 
     public static final RegistryObject<CannonInterface> CANNON_INTERFACE = BLOCKS.register(
@@ -59,12 +68,17 @@ public class Registration {
             }
     );
 
+    public static final RegistryObject<MenuType<CannonInterfaceMenu>> CANNON_INTERFACE_MENU =
+            MENUS.register("cannon_interface", () -> MenuTypeBuilder.create(CannonInterfaceMenu::new, ICannonInterfaceHost.class)
+                    .build("cannon_interface"));
 
 
     public static void init(IEventBus eventBus) {
         BLOCKS.register(eventBus);
         ITEMS.register(eventBus);
         BLOCK_ENTITIES.register(eventBus);
+        MENUS.register(eventBus);
+        PacketHandler.init();
     }
 
 }
