@@ -81,6 +81,10 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
                     this.actionSource,
                     this
                     );
+
+            this.cannonLogic.setGunpowderState(this.gunpowderState);
+            this.cannonLogic.setCraftingState(this.craftingState);
+            this.cannonLogic.setGunpowderCraftingState(this.gunpowderCraftingState);
         }
     }
 
@@ -136,12 +140,21 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
         switch (type) {
             case "gunpowderState":
                 this.gunpowderState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setGunpowderState(state);
+                }
                 break;
             case "craftingState":
                 this.craftingState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setCraftingState(state);
+                }
                 break;
             case "gunpowderCraftingState":
                 this.gunpowderCraftingState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setGunpowderCraftingState(state);
+                }
                 break;
             default:
                 throw new IllegalArgumentException("Unknown config type: " + type);

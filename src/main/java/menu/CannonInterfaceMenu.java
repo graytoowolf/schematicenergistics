@@ -12,13 +12,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
 import network.payloads.CannonInterfaceConfigClientPacket;
 import network.payloads.CannonInterfaceSyncPacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CannonInterfaceMenu extends AEBaseMenu {
+    private static final Logger log = LoggerFactory.getLogger(CannonInterfaceMenu.class);
     private AEItemKey clientItem;
     private ICannonInterfaceHost host;
-
-    private AEItemKey lastItem;
-    private String lastSchematicName;
 
     public CannonInterfaceMenu(int id, Inventory playerInventory, ICannonInterfaceHost host) {
         super(Registration.CANNON_INTERFACE_MENU.get(), id, playerInventory, host);
@@ -66,7 +66,9 @@ public class CannonInterfaceMenu extends AEBaseMenu {
             entity.setChanged();
             sendState();
         } else if (part != null && entity == null) {
-            // save the state in the part (nbt/tag)
+            part.setConfigState(type, value);
+            part.getHost().markForSave();
+            sendState();
         } else {
             throw new IllegalStateException("Both entity and part are null or not null in CannonInterfaceMenu");
         }
@@ -79,7 +81,7 @@ public class CannonInterfaceMenu extends AEBaseMenu {
         if (entity != null) {
             return entity.getConfigState("gunpowderState");
         } else if (part != null) {
-//            return part.getConfigState("gunpowderState");
+            return part.getConfigState("gunpowderState");
         }
         return false;
     }
@@ -91,7 +93,7 @@ public class CannonInterfaceMenu extends AEBaseMenu {
         if (entity != null) {
             return entity.getConfigState("craftingState");
         } else if (part != null) {
-//            return part.getConfigState("craftingState");
+            return part.getConfigState("craftingState");
         }
         return false;
     }
@@ -103,9 +105,17 @@ public class CannonInterfaceMenu extends AEBaseMenu {
         if (entity != null) {
             return entity.getConfigState("gunpowderCraftingState");
         } else if (part != null) {
-            //
+            return part.getConfigState("gunpowderCraftingState");
         }
         return false;
+    }
+
+    public void updateStateFromInterface(String state) {
+        var logic = getLogic();
+        if (logic != null) {
+            logic.sendSchematicannonState(state);
+
+        }
     }
 
     @Override
@@ -114,6 +124,7 @@ public class CannonInterfaceMenu extends AEBaseMenu {
         if (getPlayer() instanceof ServerPlayer player && getLogic() != null) {
             this.clientItem = getLogic().getItem();
 
+            // Send the CannonInterfaceSyncPacket to the player
             PacketDistributor.sendToPlayer(player,
                     new CannonInterfaceSyncPacket(
                             clientItem != null && !clientItem.toStack().isEmpty()
@@ -121,6 +132,12 @@ public class CannonInterfaceMenu extends AEBaseMenu {
                                     : new CompoundTag(),
                             getLogic().getSchematicName() != null && !getLogic().getSchematicName().isEmpty()
                                     ? getLogic().getSchematicName()
+                                    : "",
+                            getLogic().getStatusMsg() != null && !getLogic().getStatusMsg().isEmpty()
+                                    ? getLogic().getStatusMsg()
+                                    : "",
+                            getLogic().getState() != null && !getLogic().getState().isEmpty()
+                                    ? getLogic().getState()
                                     : ""
                     )
             );

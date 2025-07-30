@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableSet;
 import com.schematicenergistics.SchematicEnergistics;
 import logic.CannonInterfaceLogic;
 import logic.ICannonInterfaceHost;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -33,6 +35,10 @@ import org.jetbrains.annotations.Nullable;
 public class CannonInterfacePart extends AEBasePart implements IGridTickable, ICraftingRequester, ICannonInterfaceHost {
     private @Nullable CannonInterfaceLogic cannonLogic = null;
     private final IActionSource actionSource;
+
+    private boolean gunpowderCraftingState = true; // default
+    private boolean craftingState = true;
+    private boolean gunpowderState = true;
 
     public CannonInterfacePart(IPartItem<?> partItem) {
         super(partItem);
@@ -58,6 +64,22 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
     }
 
     @Override
+    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
+        super.writeToNBT(data, registries);
+        data.putBoolean("gunpowderState", this.gunpowderState);
+        data.putBoolean("craftingState", this.craftingState);
+        data.putBoolean("gunpowderCraftingState", this.gunpowderCraftingState);
+    }
+
+    @Override
+    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
+        super.readFromNBT(data, registries);
+        this.gunpowderState = data.getBoolean("gunpowderState");
+        this.craftingState = data.getBoolean("craftingState");
+        this.gunpowderCraftingState = data.getBoolean("gunpowderCraftingState");
+    }
+
+    @Override
     public void getBoxes(IPartCollisionHelper bch) {
         bch.addBox(2.0, 2.0, 14.0, 14.0, 14.0, 16.0);
         bch.addBox(5.0, 5.0, 12.0, 11.0, 11.0, 14.0);
@@ -72,8 +94,47 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
                     this.actionSource,
                     this
             );
+
+            this.cannonLogic.setCraftingState(this.craftingState);
+            this.cannonLogic.setGunpowderState(this.gunpowderState);
+            this.cannonLogic.setGunpowderCraftingState(this.gunpowderCraftingState);
         }
         return this.cannonLogic;
+    }
+
+    public void setConfigState(String type, boolean state) {
+        switch (type) {
+            case "gunpowderState":
+                this.gunpowderState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setGunpowderState(state);
+                }
+                break;
+            case "craftingState":
+                this.craftingState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setCraftingState(state);
+                }
+                break;
+            case "gunpowderCraftingState":
+                this.gunpowderCraftingState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setGunpowderCraftingState(state);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown config type: " + type);
+        }
+        this.getHost().markForSave();
+    }
+
+    public boolean getConfigState(String type) {
+        return switch (type) {
+            case "gunpowderState" -> this.gunpowderState;
+            case "craftingState" -> this.craftingState;
+            case "gunpowderCraftingState" -> this.gunpowderCraftingState;
+            default -> throw new IllegalArgumentException("Unknown config type: " + type);
+        };
     }
 
     @Override

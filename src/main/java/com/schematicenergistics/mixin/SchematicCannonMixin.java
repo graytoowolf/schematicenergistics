@@ -31,7 +31,24 @@ public abstract class SchematicCannonMixin {
     @Shadow
     public ItemStack missingItem;
 
+    @Shadow
+    public SchematicannonBlockEntity.State state;
+
+    @Shadow
+    public String statusMsg;
+
     private CannonInterfaceLogic cannonInterface;
+
+    @Inject(
+            method = {"initializePrinter"},
+            at = {@At("HEAD")},
+            cancellable = true
+    )
+    protected void initializePrinter(CallbackInfo ci) {
+        if (this.cannonInterface != null) {
+            this.cannonInterface.setLinkedCannon((SchematicannonBlockEntity)(Object) this);
+        }
+    }
 
     @Inject(
             method = {"findInventories"},
@@ -67,7 +84,6 @@ public abstract class SchematicCannonMixin {
         }
     }
 
-
     @Inject(
             method = {"grabItemsFromAttachedInventories"},
             at = {@At("TAIL")},
@@ -93,6 +109,8 @@ public abstract class SchematicCannonMixin {
     protected void tickPrinter(CallbackInfo ci) {
         if (this.cannonInterface == null) return;
         var blueprint = inventory.getStackInSlot(0);
+        this.cannonInterface.setStatusMsg(statusMsg);
+        this.cannonInterface.setState(state.toString());
         if (!blueprint.isEmpty()) {
             this.cannonInterface.setSchematicName(blueprint.get(AllDataComponents.SCHEMATIC_FILE));
         } else {

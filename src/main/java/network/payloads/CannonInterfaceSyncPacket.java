@@ -10,12 +10,14 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import screen.CannonInterfaceScreen;
 
-public record CannonInterfaceSyncPacket(CompoundTag data, String schematicName) implements CustomPacketPayload {
+public record CannonInterfaceSyncPacket(CompoundTag data, String schematicName, String statusMsg, String state) implements CustomPacketPayload {
     public static final Type<CannonInterfaceSyncPacket> TYPE = new Type<>(SchematicEnergistics.makeId("cannon_sync"));
 
     public static final StreamCodec<ByteBuf, CannonInterfaceSyncPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.COMPOUND_TAG, CannonInterfaceSyncPacket::data,
             ByteBufCodecs.STRING_UTF8, CannonInterfaceSyncPacket::schematicName,
+            ByteBufCodecs.STRING_UTF8, CannonInterfaceSyncPacket::statusMsg,
+            ByteBufCodecs.STRING_UTF8, CannonInterfaceSyncPacket::state,
             CannonInterfaceSyncPacket::new
     );
 
@@ -26,7 +28,7 @@ public record CannonInterfaceSyncPacket(CompoundTag data, String schematicName) 
 
     public static void handle(CannonInterfaceSyncPacket payload, IPayloadContext context) {
         if (Minecraft.getInstance().screen instanceof CannonInterfaceScreen screen) {
-            screen.updateScreenItem(payload.data, payload.schematicName);
+            screen.updateScreenItem(payload.data, payload.schematicName, payload.statusMsg, payload.state);
         }
     }
 }

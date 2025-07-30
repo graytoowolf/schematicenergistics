@@ -1,8 +1,12 @@
 package screen;
 import appeng.api.stacks.AEItemKey;
 import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
 import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.ToggleButton;
+import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity;
 import lib.CannonInterfaceClientState;
+import lib.SEUtils;
 import menu.CannonInterfaceMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
@@ -11,15 +15,16 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 import network.payloads.CannonInterfaceConfigPacket;
+import network.payloads.CannonStatePacket;
 import widgets.SEIcon;
 import widgets.SEToggleButton;
 
 public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
     private AEItemKey item;
-    private SEToggleButton toggleGunpowderCrafting;
-    private SEToggleButton toggleCrafting;
-    private SEToggleButton toggleGunpowder;
-    private String schematicName;
+    private final SEToggleButton toggleGunpowderCrafting;
+    private final SEToggleButton toggleCrafting;
+    private final SEToggleButton toggleGunpowder;
+    private SEToggleButton playPause;
 
     private boolean craftingState;
     private boolean gunpowderState;
@@ -31,8 +36,6 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         this.imageWidth = 176;
         this.imageHeight = 182;
 
-        int centerX = this.leftPos + (this.imageWidth / 2) - 8;
-
         if (CannonInterfaceClientState.hasState()) {
             this.gunpowderState = CannonInterfaceClientState.getGunpowderState();
             this.craftingState = CannonInterfaceClientState.getCraftingState();
@@ -43,10 +46,10 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         this.toggleCrafting = new SEToggleButton(
                 SEIcon.CRAFTING_ALLOW,
                 SEIcon.CRAFTING_DENY,
-                Component.translatable("gui.schematicenergistics.cannon_interface.disable_autocraft"),
-                Component.translatable("gui.schematicenergistics.cannon_interface.disable_autocraft_hint"),
-                Component.translatable("gui.schematicenergistics.cannon_interface.enable_autocraft"),
-                Component.translatable("gui.schematicenergistics.cannon_interface.enable_autocraft_hint"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.disable_gunpowder_crafting"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.disable_gunpowder_crafting_hint"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.enable_gunpowder_crafting"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.enable_gunpowder_crafting_hint"),
                 state -> {
                     sendState("craftingState", state);
                 },
@@ -82,19 +85,49 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         this.addToLeftToolbar(toggleCrafting);
         this.addToLeftToolbar(toggleGunpowder);
         this.addToLeftToolbar(toggleGunpowderCrafting);
+
     }
 
     @Override
     protected void init() {
         super.init();
         updateSchematicName(null);
+
+        int centerX = this.leftPos + (this.imageWidth / 2) - 8;
+
+        this.playPause = new SEToggleButton(
+                SEIcon.PAUSE,
+                SEIcon.PLAY,
+                Component.translatable("gui.schematicenergistics.cannon_interface.pause"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.pause_hint"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.play"),
+                Component.translatable("gui.schematicenergistics.cannon_interface.play_hint"),
+                this::sendCannonState,
+                false
+        );
+
+        this.playPause.setPosition(
+                centerX,
+                this.topPos + 56
+        );
+
+        this.addRenderableWidget(playPause);
     }
 
     public void sendState(String config, boolean state) {
         PacketDistributor.sendToServer(
-            new CannonInterfaceConfigPacket(
-                state, config
-            )
+                new CannonInterfaceConfigPacket(
+                        state, config
+                )
+        );
+    }
+
+    public void sendCannonState(boolean state) {
+        this.playPause.setState(state);
+        SchematicannonBlockEntity.State cannonState = state ? SchematicannonBlockEntity.State.RUNNING : SchematicannonBlockEntity.State.PAUSED;
+
+        PacketDistributor.sendToServer(
+                new CannonStatePacket(cannonState.toString())
         );
     }
 
@@ -133,18 +166,33 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
     }
 
     public void updateSchematicName(String schematicName) {
-        this.schematicName = schematicName;
 
         Component text = schematicName == null || schematicName.isEmpty() ?
-            Component.translatable("gui.schematicenergistics.cannon_interface.schematic_name")
+                Component.translatable("gui.schematicenergistics.cannon_interface.schematic_name")
                 : Component.literal(schematicName);
 
         setTextContent("schematic_text", text);
     }
 
-    public void updateScreenItem(CompoundTag data, String schematicName) {
+    public void updateStatusMsg(String statusMsg) {
+        Component text = statusMsg == null || statusMsg.isEmpty() ?
+                Component.translatable("gui.schematicenergistics.cannon_interface.cannon_status")
+                : SEUtils.formatCannonStatus(statusMsg);
+
+        setTextContent("status_text", text);
+    }
+
+    public void updateCannonState(String state) {
+        System.out.println(state);
+        boolean cState = !"PAUSED".equals(state);
+        this.playPause.setState(cState);
+    }
+
+    public void updateScreenItem(CompoundTag data, String schematicName, String statusMsg, String state) {
         var item = AEItemKey.fromTag(menu.getLogic().getLevel().registryAccess(), data);
         this.item = item != null ? item : AEItemKey.of(ItemStack.EMPTY);
         updateSchematicName(schematicName);
+        updateStatusMsg(statusMsg);
+        updateCannonState(state);
     }
 }

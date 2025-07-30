@@ -7,6 +7,7 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import network.payloads.CannonInterfaceConfigClientPacket;
 import network.payloads.CannonInterfaceConfigPacket;
 import network.payloads.CannonInterfaceSyncPacket;
+import network.payloads.CannonStatePacket;
 
 public class PacketHandler {
 
@@ -37,6 +38,12 @@ public class PacketHandler {
                 CannonInterfaceConfigClientPacket.TYPE,
                 CannonInterfaceConfigClientPacket.STREAM_CODEC,
                 handler(CannonInterfaceConfigClientPacket::handle)
+        );
+
+        registrar.playToServer(
+                CannonStatePacket.TYPE,
+                CannonStatePacket.STREAM_CODEC,
+                handler(CannonStatePacket::handle)
         );
     }
 

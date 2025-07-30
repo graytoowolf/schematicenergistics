@@ -10,6 +10,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import screen.CannonInterfaceScreen;
 
+// Server -> Client
 public record CannonInterfaceConfigClientPacket(boolean gunpowderState, boolean craftingState, boolean gunpowderCraftingState) implements CustomPacketPayload {
     public static final Type<CannonInterfaceConfigClientPacket> TYPE = new Type<>(SchematicEnergistics.makeId("cannon_state"));
 

@@ -8,6 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+// Client -> Server
 public record CannonInterfaceConfigPacket(boolean value, String configType) implements CustomPacketPayload {
     public static final Type<CannonInterfaceConfigPacket> TYPE = new Type<>(SchematicEnergistics.makeId("cannon_config"));
 
