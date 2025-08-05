@@ -34,6 +34,8 @@ import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import part.CannonInterfacePart;
 import part.CannonInterfacePartItem;
+import part.CannonInterfaceTerminal;
+import part.CannonInterfaceTerminalPartItem;
 
 import java.util.function.Supplier;
 
@@ -46,6 +48,7 @@ public final class Registration {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CannonInterfaceEntity>> CANNON_INTERFACE_ENTITY;
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, SchematicEnergistics.MOD_ID);
     public static DeferredItem<PartItem<CannonInterfacePart>> CANNON_INTERFACE_PART_ITEM;
+    public static DeferredItem<PartItem<CannonInterfaceTerminal>> CANNON_TERMINAL;
     public static final Supplier<MenuType<CannonInterfaceMenu>> CANNON_INTERFACE_MENU;
 
     private static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -80,6 +83,15 @@ public final class Registration {
                     );
                 }
         );
+
+        CANNON_TERMINAL = ITEMS.registerItem(
+                "cannon_interface_terminal", properties -> {
+                    PartModels.registerModels(PartModelsHelper.createModels(CannonInterfaceTerminal.class));
+
+                    return new CannonInterfaceTerminalPartItem(properties, CannonInterfaceTerminal.class, (partItem) -> new CannonInterfaceTerminal(partItem, true));
+                }
+        );
+
         CANNON_INTERFACE_ENTITY = BLOCK_ENTITIES.register("cannon_interface", () -> {
             BlockEntityType<CannonInterfaceEntity> type = Builder.of(CannonInterfaceEntity::new, CANNON_INTERFACE.get()).build(null);
             AEBaseBlockEntity.registerBlockEntityItem(type, CANNON_INTERFACE.asItem());

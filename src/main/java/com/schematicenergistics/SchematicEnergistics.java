@@ -1,10 +1,12 @@
 package com.schematicenergistics;
 
-import appeng.api.ids.AECreativeTabIds;
+import appeng.api.util.AEColor;
+import appeng.client.render.StaticItemColor;
 import appeng.init.client.InitScreens;
 import core.Registration;
+import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.util.FastColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,6 +18,7 @@ import net.neoforged.fml.config.ModConfig.Type;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -39,6 +42,7 @@ public class SchematicEnergistics {
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modEventBus.addListener(this::registerScreens);
+            modEventBus.addListener(this::registerColorHandler);
         }
     }
 
@@ -57,6 +61,15 @@ public class SchematicEnergistics {
                 CannonInterfaceScreen::new,
                 "/screens/cannon_interface.json"
         );
+    }
+
+    // Credits to ExtendedAE
+    private static ItemColor makeOpaque(ItemColor itemColor) {
+        return (stack, tintIndex) -> FastColor.ARGB32.opaque(itemColor.getColor(stack, tintIndex));
+    }
+
+    public void registerColorHandler(RegisterColorHandlersEvent.Item event) {
+        event.register(makeOpaque(new StaticItemColor(AEColor.TRANSPARENT)), Registration.CANNON_TERMINAL);
     }
 
     @SubscribeEvent

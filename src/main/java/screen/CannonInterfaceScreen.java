@@ -109,7 +109,6 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         );
 
 
-
         this.playPause.setPosition(
                 centerX - 16,
                 this.topPos + 56
