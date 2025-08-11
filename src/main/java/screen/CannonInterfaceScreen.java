@@ -7,6 +7,7 @@ import lib.CannonInterfaceClientState;
 import lib.SEUtils;
 import menu.CannonInterfaceMenu;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -14,6 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import network.PacketHandler;
 import network.payloads.CannonInterfaceConfigPacket;
 import network.payloads.CannonStatePacket;
+import network.payloads.ReturnToTerminalPacket;
 import widgets.SEIcon;
 import widgets.SESimpleIconButton;
 import widgets.SEToggleButton;
@@ -30,6 +32,10 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
     private boolean gunpowderState;
     private boolean gunpowderCraftingState;
 
+    private BlockPos terminal = null;
+    private SESimpleIconButton backButton = null;
+
+    private static final int MAX_TEXT_WIDTH = 164;
 
     public CannonInterfaceScreen(CannonInterfaceMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -126,6 +132,18 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         );
 
         this.addRenderableWidget(stop);
+
+        this.backButton = new SESimpleIconButton(
+                SEIcon.BACK,
+                Component.translatable("gui.schematicenergistics.cannon_terminal.return_terminal"),
+                Component.empty(),
+                (btn) -> {
+                    PacketHandler.sendToServer(new ReturnToTerminalPacket(terminal));
+                }
+        );
+        backButton.setPosition(leftPos + imageWidth - 28, this.topPos - 10);
+        backButton.visible = (terminal != null);
+        this.addRenderableWidget(backButton);
     }
 
     public void sendState(String config, boolean state) {
@@ -188,20 +206,37 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
     }
 
     public void updateSchematicName(String schematicName) {
-
         Component text = schematicName == null || schematicName.isEmpty() ?
                 Component.translatable("gui.schematicenergistics.cannon_interface.schematic_name")
                 : Component.literal(schematicName);
 
-        setTextContent("schematic_text", text);
+        Component limitedText = limitTextWidth(text, MAX_TEXT_WIDTH);
+        setTextContent("schematic_text", limitedText);
+    }
+
+    private Component limitTextWidth(Component originalText, int maxWidth) {
+        String textString = originalText.getString();
+
+        if (this.font.width(textString) <= maxWidth) {
+            return originalText;
+        }
+
+        String ellipsis = "...";
+        int ellipsisWidth = this.font.width(ellipsis);
+        int availableWidth = maxWidth - ellipsisWidth;
+
+        String truncatedText = this.font.plainSubstrByWidth(textString, availableWidth);
+
+        return Component.literal(truncatedText + ellipsis);
     }
 
     public void updateStatusMsg(String statusMsg) {
         Component text = statusMsg == null || statusMsg.isEmpty() ?
-                Component.translatable("gui.schematicenergistics.cannon_interface.cannon_status")
+                Component.translatable("gui.schematicenergistics.cannon_interface.missing_cannon")
                 : SEUtils.formatCannonStatus(statusMsg);
 
-        setTextContent("status_text", text);
+        Component limitedText = limitTextWidth(text, MAX_TEXT_WIDTH);
+        setTextContent("status_text", limitedText);
     }
 
     public void updateCannonState(String state) {
@@ -209,9 +244,16 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         this.playPause.setState(cState);
     }
 
-    public void updateScreenItem(CompoundTag data, String schematicName, String statusMsg, String state) {
+    public void updateScreenItem(CompoundTag data, String schematicName, String statusMsg, String state, BlockPos terminalPos) {
         var item = AEItemKey.fromTag(data);
         this.item = item != null ? item : AEItemKey.of(ItemStack.EMPTY);
+
+        this.terminal = terminalPos;
+
+        if (backButton != null) {
+            backButton.visible = (terminal != null);
+        }
+
         updateSchematicName(schematicName);
         updateStatusMsg(statusMsg);
         updateCannonState(state);

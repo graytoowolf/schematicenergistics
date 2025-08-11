@@ -17,6 +17,7 @@ import appeng.core.settings.TickRates;
 import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity;
 import lib.CraftingHelper;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -45,6 +46,8 @@ public class CannonInterfaceLogic {
     private boolean gunpowderState = true;
 
     private SchematicannonBlockEntity cannonEntity;
+
+    private BlockPos terminalPos = null;
 
     public CannonInterfaceLogic(Level level, IManagedGridNode node, IActionSource actionSource, ICraftingRequester requester) {
         this.level = level;
@@ -181,6 +184,14 @@ public class CannonInterfaceLogic {
         }
 
         return TickRateModulation.FASTER;
+    }
+
+    public void setTerminalPos(BlockPos pos) {
+        this.terminalPos = pos;
+    }
+
+    public BlockPos getTerminalPos() {
+        return this.terminalPos;
     }
 
     private void processingPending(CraftingHelper helper) {

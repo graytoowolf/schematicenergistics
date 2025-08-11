@@ -1,11 +1,16 @@
 package com.schematicenergistics;
 
 import appeng.api.ids.AECreativeTabIds;
+import appeng.api.util.AEColor;
+import appeng.client.render.StaticItemColor;
 import appeng.init.client.InitScreens;
 import core.Registration;
+import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -18,6 +23,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import screen.CannonInterfaceScreen;
+import screen.CannonInterfaceTerminalScreen;
 import tab.CreativeTab;
 
 @Mod(SchematicEnergistics.MOD_ID)
@@ -65,7 +71,29 @@ public class SchematicEnergistics {
                         CannonInterfaceScreen::new,
                         "/screens/cannon_interface.json"
                 );
+
+                InitScreens.register(
+                        Registration.CANNON_INTERFACE_TERMINAL_MENU.get(),
+                        CannonInterfaceTerminalScreen::new,
+                        "/screens/cannon_interface_terminal.json"
+                );
             });
+        }
+
+        // Credits to ExtendedAE
+        private static ItemColor makeOpaque(ItemColor itemColor) {
+            return (stack, tintIndex) -> {
+                int color = itemColor.getColor(stack, tintIndex);
+                return (color & 0x00FFFFFF) | 0xFF000000;
+            };
+        }
+
+        @SubscribeEvent
+        public static void registerColorHandler(RegisterColorHandlersEvent.Item event) {
+            event.register(
+                    makeOpaque(new StaticItemColor(AEColor.TRANSPARENT)),
+                    Registration.CANNON_INTERFACE_TERMINAL.get()
+            );
         }
     }
 }

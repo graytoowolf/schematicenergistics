@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "ae2:illuminated_panel"
+    },
+    {
+      "item": "schematicenergistics:cannon_interface"
+    },
+    {
+      "item": "ae2:engineering_processor"
+    }
+  ],
+  "result": {
+    "item": "schematicenergistics:cannon_interface_terminal",
+    "count": 1
+  }
+}

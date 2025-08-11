@@ -125,17 +125,40 @@ public class CannonInterfaceMenu extends AEBaseMenu {
         if (getPlayer() instanceof ServerPlayer player && getLogic() != null) {
             this.clientItem = getLogic().getItem();
 
-            PacketHandler.sendToClient(
-                    new CannonInterfaceSyncPacket(
-                            clientItem != null && !clientItem.toStack().isEmpty()
-                                    ? clientItem.toTag()
-                                    : new CompoundTag(),
-                            getLogic().getSchematicName() != null ? getLogic().getSchematicName() : "",
-                            getLogic().getStatusMsg() != null ? getLogic().getStatusMsg() : "",
-                            getLogic().getState() != null ? getLogic().getState() : ""
-                    ),
-                    player
-            );
+            var item = clientItem != null && !clientItem.toStack().isEmpty()
+                    ? clientItem.toTag()
+                    : new CompoundTag();
+            var name = getLogic().getSchematicName() != null
+                    ? getLogic().getSchematicName()
+                    : "";
+            var status = getLogic().getStatusMsg() != null
+                    ? getLogic().getStatusMsg()
+                    : "";
+            var state = getLogic().getState() != null ? getLogic().getState() : "";
+            var terminal = getLogic().getTerminalPos();
+
+            if (terminal != null) {
+                PacketHandler.sendToClient(
+                        new CannonInterfaceSyncPacket(
+                                item,
+                                name,
+                                status,
+                                state,
+                                terminal
+                        ),
+                        player
+                );
+            } else {
+                PacketHandler.sendToClient(
+                        new CannonInterfaceSyncPacket(
+                                item,
+                                name,
+                                status,
+                                state
+                        ),
+                        player
+                );
+            }
         }
     }
 

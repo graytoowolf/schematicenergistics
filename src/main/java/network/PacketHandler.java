@@ -7,10 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
-import network.payloads.CannonInterfaceConfigClientPacket;
-import network.payloads.CannonInterfaceConfigPacket;
-import network.payloads.CannonInterfaceSyncPacket;
-import network.payloads.CannonStatePacket;
+import network.payloads.*;
 
 public class PacketHandler {
     private static final String PROTOCOL_VERSION = "1";
@@ -55,6 +52,27 @@ public class PacketHandler {
                 CannonStatePacket::toBytes,
                 CannonStatePacket::fromBytes,
                 CannonStatePacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                nextId(), TerminalListClientPacket.class,
+                TerminalListClientPacket::encode,
+                TerminalListClientPacket::decode,
+                TerminalListClientPacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                nextId(), OpenCannonInterfacePacket.class,
+                OpenCannonInterfacePacket::encode,
+                OpenCannonInterfacePacket::decode,
+                OpenCannonInterfacePacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                nextId(), ReturnToTerminalPacket.class,
+                ReturnToTerminalPacket::encode,
+                ReturnToTerminalPacket::decode,
+                ReturnToTerminalPacket::handle
         );
     }
 

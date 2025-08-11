@@ -1,0 +1,9 @@
+{
+  "parent": "schematicenergistics:item/display_base",
+  "textures": {
+    "front": "schematicenergistics:part/cannon_terminal",
+    "front_bright": "schematicenergistics:part/cannon_terminal_bright",
+    "front_medium": "schematicenergistics:part/cannon_terminal_medium",
+    "front_dark": "schematicenergistics:part/cannon_terminal_dark"
+  }
+}

@@ -26,7 +26,7 @@
     },
     "status_text": {
       "text": {
-        "translate": "gui.schematicenergistics.cannon_interface.cannon_status"
+        "translate": "gui.schematicenergistics.cannon_interface.missing_cannon"
       },
       "position": {
         "left": 12,

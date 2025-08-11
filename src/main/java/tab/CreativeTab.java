@@ -21,6 +21,7 @@ public class CreativeTab {
                     .displayItems((displayParameters, output) -> {
                         output.accept(Registration.CANNON_INTERFACE.get());
                         output.accept(Registration.CANNON_INTERFACE_PART_ITEM.get());
+                        output.accept(Registration.CANNON_INTERFACE_TERMINAL.get());
                     })
                     .build()
     );

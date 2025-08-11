@@ -1,5 +1,6 @@
 package core;
 
+import appeng.api.implementations.parts.IMonitorPart;
 import appeng.api.parts.PartModels;
 import appeng.block.AEBaseBlock;
 import appeng.blockentity.AEBaseBlockEntity;
@@ -12,6 +13,7 @@ import blockitem.CannonInterfaceBlockItem;
 import com.schematicenergistics.SchematicEnergistics;
 import logic.ICannonInterfaceHost;
 import menu.CannonInterfaceMenu;
+import menu.CannonInterfaceTerminalMenu;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.world.flag.FeatureFlags;
@@ -68,10 +70,22 @@ public class Registration {
             }
     );
 
+    public static RegistryObject<Item> CANNON_INTERFACE_TERMINAL = ITEMS.register(
+            "cannon_interface_terminal",
+            () -> {
+                PartModels.registerModels(PartModelsHelper.createModels(part.CannonInterfaceTerminal.class));
+
+                return new part.CannonInterfaceTerminalPartItem(new Item.Properties(), part.CannonInterfaceTerminal.class, (partItem) -> new part.CannonInterfaceTerminal(partItem, true));
+            }
+    );
+
     public static final RegistryObject<MenuType<CannonInterfaceMenu>> CANNON_INTERFACE_MENU =
             MENUS.register("cannon_interface", () -> MenuTypeBuilder.create(CannonInterfaceMenu::new, ICannonInterfaceHost.class)
                     .build("cannon_interface"));
 
+    public static final RegistryObject<MenuType<CannonInterfaceTerminalMenu>> CANNON_INTERFACE_TERMINAL_MENU =
+            MENUS.register("cannon_interface_terminal", () -> MenuTypeBuilder.create(CannonInterfaceTerminalMenu::new, IMonitorPart.class)
+                    .build("cannon_interface_terminal"));
 
     public static void init(IEventBus eventBus) {
         BLOCKS.register(eventBus);

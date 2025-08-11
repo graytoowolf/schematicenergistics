@@ -115,7 +115,7 @@ public abstract class SchematicCannonMixin {
         this.cannonInterface.setStatusMsg(statusMsg);
         this.cannonInterface.setState(state.toString());
         if (!blueprint.isEmpty() && blueprint.getTag() != null) {
-            this.cannonInterface.setSchematicName(blueprint.getTag().getString("schematic_file"));
+            this.cannonInterface.setSchematicName(blueprint.getTag().getString("File"));
         } else {
             this.cannonInterface.setSchematicName(null);
             this.cannonInterface.setItem(null);

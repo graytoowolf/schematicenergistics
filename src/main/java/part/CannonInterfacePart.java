@@ -63,6 +63,7 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
     @Override
     public boolean onPartActivate(Player player, InteractionHand hand, Vec3 pos) {
         if (!player.getCommandSenderWorld().isClientSide()) {
+            getLogic().setTerminalPos(null);
             this.openMenu(player, MenuLocators.forPart(this));
         }
 
