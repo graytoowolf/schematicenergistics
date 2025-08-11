@@ -255,8 +255,6 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
             backButton.visible = (terminal != null);
         }
 
-        System.out.println(terminalPos);
-
         updateSchematicName(schematicName);
         updateStatusMsg(statusMsg);
         updateCannonState(state);
