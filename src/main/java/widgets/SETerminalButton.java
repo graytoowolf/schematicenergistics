@@ -12,9 +12,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.Nullable;
 
-import javax.tools.Tool;
 import java.util.function.Consumer;
 
 public class SETerminalButton extends AbstractWidget {
