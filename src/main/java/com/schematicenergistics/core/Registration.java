@@ -40,19 +40,19 @@ public class Registration {
             () -> new CannonInterface(AEBaseBlock.metalProps())
     );
 
+    public static final RegistryObject<BlockItem> CANNON_INTERFACE_ITEM = ITEMS.register("cannon_interface",
+            () -> new CannonInterfaceBlockItem(CANNON_INTERFACE.get(), new Item.Properties()));
+
     public static final RegistryObject<BlockEntityType<CannonInterfaceEntity>> CANNON_INTERFACE_ENTITY =
             BLOCK_ENTITIES.register("cannon_interface",
                     () -> {
                         BlockEntityType<CannonInterfaceEntity> type = BlockEntityType.Builder.of(CannonInterfaceEntity::new, CANNON_INTERFACE.get()).build(null);
-                        AEBaseBlockEntity.registerBlockEntityItem(type, CANNON_INTERFACE.get().asItem());
                         CANNON_INTERFACE.get().setBlockEntity(CannonInterfaceEntity.class, type, null, null);
+                        AEBaseBlockEntity.registerBlockEntityItem(type, CANNON_INTERFACE_ITEM.get());
                         return type;
                     });
 
 
-
-    public static final RegistryObject<BlockItem> CANNON_INTERFACE_ITEM = ITEMS.register("cannon_interface",
-            () -> new CannonInterfaceBlockItem(CANNON_INTERFACE.get(), new Item.Properties()));
 
     public static RegistryObject<Item> CANNON_INTERFACE_PART_ITEM = ITEMS.register(
             "cannon_interface_part",
@@ -85,8 +85,8 @@ public class Registration {
                     .build("cannon_interface_terminal"));
 
     public static void init(IEventBus eventBus) {
-        BLOCKS.register(eventBus);
         ITEMS.register(eventBus);
+        BLOCKS.register(eventBus);
         BLOCK_ENTITIES.register(eventBus);
         MENUS.register(eventBus);
         PacketHandler.init();

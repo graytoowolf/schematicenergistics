@@ -16,6 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -27,7 +28,8 @@ public abstract class SchematicCannonMixin {
     @Shadow
     public SchematicannonInventory inventory;
 
-    private CannonInterfaceLogic cannonInterface;
+    @Unique
+    private CannonInterfaceLogic schematicenergistics$cannonInterface;
 
     @Shadow
     public ItemStack missingItem;
@@ -41,12 +43,11 @@ public abstract class SchematicCannonMixin {
     @Inject(
             method = {"initializePrinter"},
             at = {@At("HEAD")},
-            cancellable = true,
             remap = false
     )
     protected void initializePrinter(CallbackInfo ci) {
-        if (this.cannonInterface != null) {
-            this.cannonInterface.setLinkedCannon((SchematicannonBlockEntity)(Object) this);
+        if (this.schematicenergistics$cannonInterface != null) {
+            this.schematicenergistics$cannonInterface.setLinkedCannon((SchematicannonBlockEntity)(Object) this);
         }
     }
 
@@ -79,9 +80,9 @@ public abstract class SchematicCannonMixin {
         }
 
         if (logicalHost != null) {
-            this.cannonInterface = logicalHost;
+            this.schematicenergistics$cannonInterface = logicalHost;
         } else {
-            this.cannonInterface = null;
+            this.schematicenergistics$cannonInterface = null;
         }
     }
 
@@ -93,10 +94,10 @@ public abstract class SchematicCannonMixin {
     )
     protected void grabItemsFromAttachedInventories(ItemRequirement.StackRequirement required, boolean simulate, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValue()) {
-            if (this.cannonInterface != null) {
+            if (this.schematicenergistics$cannonInterface != null) {
                 AEItemKey key = AEItemKey.of(required.stack);
                 long neededCount = required.stack.getCount();
-                boolean result = this.cannonInterface.request(key, neededCount, simulate);
+                boolean result = this.schematicenergistics$cannonInterface.request(key, neededCount, simulate);
                 cir.setReturnValue(result);
             }
         }
@@ -105,26 +106,25 @@ public abstract class SchematicCannonMixin {
     @Inject(
             method = {"tickPrinter"},
             at = {@At("HEAD")},
-            cancellable = true,
             remap = false
     )
     protected void tickPrinter(CallbackInfo ci) {
-        if (this.cannonInterface == null) return;
+        if (this.schematicenergistics$cannonInterface == null) return;
 
         var blueprint = inventory.getStackInSlot(0);
-        this.cannonInterface.setStatusMsg(statusMsg);
-        this.cannonInterface.setState(state.toString());
+        this.schematicenergistics$cannonInterface.setStatusMsg(statusMsg);
+        this.schematicenergistics$cannonInterface.setState(state.toString());
         if (!blueprint.isEmpty() && blueprint.getTag() != null) {
-            this.cannonInterface.setSchematicName(blueprint.getTag().getString("File"));
+            this.schematicenergistics$cannonInterface.setSchematicName(blueprint.getTag().getString("File"));
         } else {
-            this.cannonInterface.setSchematicName(null);
-            this.cannonInterface.setItem(null);
+            this.schematicenergistics$cannonInterface.setSchematicName(null);
+            this.schematicenergistics$cannonInterface.setItem(null);
         }
 
         if (missingItem != null) {
             var key = AEItemKey.of(missingItem);
-            if (key != this.cannonInterface.getItem()) {
-                this.cannonInterface.setItem(key);
+            if (key != this.schematicenergistics$cannonInterface.getItem()) {
+                this.schematicenergistics$cannonInterface.setItem(key);
             }
         }
 
@@ -134,7 +134,7 @@ public abstract class SchematicCannonMixin {
         int amountToRefill = maxStackSize - currentAmountOnSlot;
         if (amountToRefill <= 0) return;
 
-        int insertedItems = this.cannonInterface.refill(amountToRefill);
+        int insertedItems = this.schematicenergistics$cannonInterface.refill(amountToRefill);
         if (insertedItems <= 0)  return;
 
         ItemStack gunpowderStack = new ItemStack(Items.GUNPOWDER, insertedItems);
