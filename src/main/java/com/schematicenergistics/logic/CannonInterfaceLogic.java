@@ -51,7 +51,7 @@ public class CannonInterfaceLogic {
     private String statusMsg = "";
     private String state = "";
 
-    private boolean bulkCraftState = true;
+    private boolean bulkCraftState = false;
     private boolean gunpowderCraftingState = true;
     private boolean craftingState = true;
     private boolean gunpowderState = true;

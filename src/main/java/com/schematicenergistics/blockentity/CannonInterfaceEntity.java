@@ -34,7 +34,7 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
     private boolean gunpowderCraftingState = true; // default
     private boolean craftingState = true;
     private boolean gunpowderState = true;
-    private boolean bulkCraftState = true;
+    private boolean bulkCraftState = false;
 
     public CannonInterfaceEntity(BlockPos pos, BlockState state) {
         this(Registration.CANNON_INTERFACE_ENTITY.get(), pos, state);

@@ -39,7 +39,7 @@ public class CannonInterfacePart extends AEBasePart implements IGridTickable, IC
     private boolean gunpowderCraftingState = true; // default
     private boolean craftingState = true;
     private boolean gunpowderState = true;
-    private boolean bulkCraftState = true;
+    private boolean bulkCraftState = false;
 
     public CannonInterfacePart(IPartItem<?> partItem) {
         super(partItem);

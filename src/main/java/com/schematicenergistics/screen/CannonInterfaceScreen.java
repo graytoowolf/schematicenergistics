@@ -55,8 +55,8 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         }
 
         this.toggleBulkCraft = new SEToggleButton(
-                SEIcon.CRAFTING_ALLOW,
-                SEIcon.CRAFTING_DENY,
+                SEIcon.BULK_CRAFT_ALLOW,
+                SEIcon.BULK_CRAFT_DENY,
                 Component.translatable("gui.schematicenergistics.cannon_interface.disable_bulk_craft"),
                 Component.translatable("gui.schematicenergistics.cannon_interface.disable_bulk_craft_hint"),
                 Component.translatable("gui.schematicenergistics.cannon_interface.enable_bulk_craft"),
