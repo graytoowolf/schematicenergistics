@@ -380,6 +380,9 @@ public class CannonInterfaceLogic {
     public void setState(String state) {
         this.state = state;
         if (bulkCraftState) {
+            if (isPreCrafting) {
+                setStatusMsg("BULK_CRAFTING");
+            }
             if ("STOPPED".equals(state)) {
                 this.hasPreCrafted = false;
                 this.isPreCrafting = false;
