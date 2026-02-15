@@ -1,5 +1,7 @@
 package com.schematicenergistics.util;
 
+import com.simibubi.create.content.schematics.cannon.MaterialChecklist;
+
 public interface ISchematicAccessor {
-    Object schematicenergistics$getChecklist();
+    MaterialChecklist schematicenergistics$getChecklist();
 }

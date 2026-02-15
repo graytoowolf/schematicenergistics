@@ -14,12 +14,16 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.storage.MEStorage;
 import com.google.common.collect.ImmutableSet;
+import com.simibubi.create.content.schematics.cannon.MaterialChecklist;
 import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity;
 import com.schematicenergistics.lib.CraftingHelper;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -244,7 +248,32 @@ public class CannonInterfaceLogic {
             processPreCrafting();
         }
 
+//        isChecklistReady();
+
         return TickRateModulation.FASTER;
+    }
+
+    private boolean isChecklistReady() {
+        if (!(this.cannonEntity instanceof ISchematicAccessor accessor)) {
+            return false;
+        }
+
+        MaterialChecklist checklist = accessor.schematicenergistics$getChecklist();
+
+        if (checklist == null) {
+            log.debug("Checklist is null");
+            return false;
+        }
+
+        boolean hasItems = !checklist.required.isEmpty() || !checklist.damageRequired.isEmpty();
+
+        if (!hasItems) {
+            log.debug("Checklist is empty - required: {}, damage: {}",
+                    checklist.required.size(),
+                    checklist.damageRequired.size());
+        }
+
+        return hasItems;
     }
 
     private void processPreCrafting() {
@@ -388,7 +417,6 @@ public class CannonInterfaceLogic {
                 this.isPreCrafting = false;
                 this.pendingCraftingJobs.clear();
             }
-
             if ("RUNNING".equals(state) && !hasPreCrafted && !isPreCrafting) {
                 if (startPreCrafting()) {
                     sendSchematicannonState("PAUSED");
@@ -405,57 +433,20 @@ public class CannonInterfaceLogic {
             return false;
         }
 
-        Object rawChecklist = accessor.schematicenergistics$getChecklist();
-        if (rawChecklist == null)
+        MaterialChecklist checklist = accessor.schematicenergistics$getChecklist();
+
+        if (checklist == null) {
             return false;
-
-        List<?> checklist = null;
-
-        if (rawChecklist instanceof List) {
-            checklist = (List<?>) rawChecklist;
-        } else {
-            try {
-                if (rawChecklist instanceof Iterable) {
-                    java.util.ArrayList<Object> collected = new java.util.ArrayList<>();
-                    for (Object obj : (Iterable<?>) rawChecklist) {
-                        collected.add(obj);
-                    }
-                    if (!collected.isEmpty()) {
-                        checklist = collected;
-                    }
-                }
-
-                if (checklist == null) {
-                    for (java.lang.reflect.Field f : rawChecklist.getClass().getDeclaredFields()) {
-                        f.setAccessible(true);
-                        Object val = f.get(rawChecklist);
-
-                        if (val instanceof List) {
-                            List<?> list = (List<?>) val;
-                            if (!list.isEmpty()) {
-                                checklist = list;
-                                break;
-                            }
-                        } else if (f.getName().equals("required") && val instanceof Map) {
-                            Map<?, ?> map = (Map<?, ?>) val;
-                            if (!map.isEmpty()) {
-                                checklist = new java.util.ArrayList<>(map.entrySet());
-                                break;
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
 
-        if (checklist == null || checklist.isEmpty())
+        if (checklist.required.isEmpty() && checklist.damageRequired.isEmpty()) {
             return false;
+        }
 
         var grid = this.node.getGrid();
         if (grid == null)
             return false;
+
         var storage = grid.getStorageService().getInventory();
         var craftingService = grid.getCraftingService();
         if (storage == null || craftingService == null)
@@ -463,134 +454,96 @@ public class CannonInterfaceLogic {
 
         Map<AEItemKey, Long> totalRequired = new HashMap<>();
 
-        for (Object obj : checklist) {
-            if (obj == null)
+        for (Object2IntMap.Entry<Item> entry : checklist.required.object2IntEntrySet()) {
+            Item item = entry.getKey();
+            int required = entry.getIntValue();
+
+            int gathered = checklist.gathered.getOrDefault(item, 0);
+            int needed = required - gathered;
+
+            if (needed <= 0) {
                 continue;
-
-            Object reqObj = obj;
-            int quantityOverride = -1;
-
-            if (obj instanceof Map.Entry) {
-                Map.Entry<?, ?> entry = (Map.Entry<?, ?>) obj;
-                reqObj = entry.getKey();
-                Object val = entry.getValue();
-                if (val instanceof Number) {
-                    quantityOverride = ((Number) val).intValue();
-                }
             }
 
-            if (reqObj == null)
-                continue;
+            ItemStack stack = new ItemStack(item);
+            AEItemKey key = AEItemKey.of(stack);
+            if (key != null) {
+                totalRequired.put(key, (long) needed);
+            }
+        }
 
-            ItemStack stack = extractItemStack(reqObj);
+        for (Object2IntMap.Entry<Item> entry : checklist.damageRequired.object2IntEntrySet()) {
+            Item item = entry.getKey();
+            int damageAmount = entry.getIntValue();
 
-            if (stack != null && !stack.isEmpty()) {
+            ItemStack stack = new ItemStack(item);
+            int maxDamage = stack.getMaxDamage();
+            if (maxDamage > 0) {
+                int itemsNeeded = (int) Math.ceil(damageAmount / (double) maxDamage);
+
+                int gathered = checklist.gathered.getOrDefault(item, 0);
+                itemsNeeded -= gathered;
+
+                if (itemsNeeded <= 0) {
+                    continue;
+                }
+
                 AEItemKey key = AEItemKey.of(stack);
                 if (key != null) {
-                    long amount = quantityOverride > 0 ? quantityOverride : stack.getCount();
-                    totalRequired.merge(key, amount, Long::sum);
+                    totalRequired.merge(key, (long) itemsNeeded, Long::sum);
                 }
             }
+        }
+
+        if (totalRequired.isEmpty()) {
+            return false;
         }
 
         boolean startedAny = false;
+        int craftingStarted = 0;
+        int alreadyAvailable = 0;
+        int notCraftable = 0;
 
         for (Map.Entry<AEItemKey, Long> entry : totalRequired.entrySet()) {
             AEItemKey key = entry.getKey();
-            long required = entry.getValue();
+            long needed = entry.getValue();
+
             long available = storage.getAvailableStacks().get(key);
 
-            if (available < required) {
-                if (craftingService.isCraftable(key)) {
-                    long toCraft = required - available;
-                    CraftingHelper helper = new CraftingHelper(this);
-                    helper.startCraft(key, toCraft, CalculationStrategy.REPORT_MISSING_ITEMS);
-                    if (helper.getPendingCraft() != null) {
-                        pendingCraftingJobs.put(key, helper);
-                        startedAny = true;
-                    }
-                }
+            if (available >= needed) {
+                alreadyAvailable++;
+                continue;
+            }
+
+            long toCraft = needed - available;
+
+            if (!craftingService.isCraftable(key)) {
+                notCraftable++;
+                log.warn("Item {} not craftable (need {})", key, toCraft);
+                continue;
+            }
+
+            log.info("Crafting: {} x{} (have={}, need={})",
+                    key, toCraft, available, needed);
+
+            CraftingHelper helper = new CraftingHelper(this);
+            helper.startCraft(key, toCraft, CalculationStrategy.REPORT_MISSING_ITEMS);
+
+            if (helper.getPendingCraft() != null) {
+                pendingCraftingJobs.put(key, helper);
+                startedAny = true;
+                craftingStarted++;
             }
         }
+
+        log.info("Bulk craft queued - Crafting: {}, Available: {}, Not craftable: {}",
+                craftingStarted, alreadyAvailable, notCraftable);
 
         if (startedAny) {
             this.isPreCrafting = true;
         }
 
         return startedAny;
-    }
-
-    private ItemStack extractItemStack(Object reqObj) {
-        if (reqObj instanceof ItemStack) {
-            return (ItemStack) reqObj;
-        }
-        if (reqObj instanceof net.minecraft.world.item.Item) {
-            return new ItemStack((net.minecraft.world.item.Item) reqObj);
-        }
-        if (reqObj instanceof net.minecraft.world.level.block.Block) {
-            return new ItemStack((net.minecraft.world.level.block.Block) reqObj);
-        }
-
-        try {
-            for (java.lang.reflect.Method m : reqObj.getClass().getMethods()) {
-                if (m.getParameterCount() == 0 && m.getReturnType() == ItemStack.class) {
-                    Object val = m.invoke(reqObj);
-                    if (val instanceof ItemStack) {
-                        return (ItemStack) val;
-                    }
-                }
-            }
-
-            for (java.lang.reflect.Method m : reqObj.getClass().getDeclaredMethods()) {
-                if (m.getParameterCount() == 0 && m.getReturnType() == ItemStack.class) {
-                    m.setAccessible(true);
-                    Object val = m.invoke(reqObj);
-                    if (val instanceof ItemStack) {
-                        return (ItemStack) val;
-                    }
-                }
-            }
-        } catch (Exception ignored) {
-        }
-
-        try {
-            java.lang.reflect.Field stackField = null;
-            try {
-                stackField = reqObj.getClass().getDeclaredField("stack");
-            } catch (NoSuchFieldException e) {
-                Class<?> sc = reqObj.getClass().getSuperclass();
-                if (sc != null && sc != Object.class) {
-                    try {
-                        stackField = sc.getDeclaredField("stack");
-                    } catch (NoSuchFieldException ignored) {
-                    }
-                }
-            }
-
-            if (stackField != null) {
-                stackField.setAccessible(true);
-                Object val = stackField.get(reqObj);
-                if (val instanceof ItemStack) {
-                    return (ItemStack) val;
-                }
-            }
-        } catch (Exception ignored) {
-        }
-
-        try {
-            for (java.lang.reflect.Field f : reqObj.getClass().getDeclaredFields()) {
-                f.setAccessible(true);
-                if (f.getType() == ItemStack.class) {
-                    Object val = f.get(reqObj);
-                    if (val instanceof ItemStack) {
-                        return (ItemStack) val;
-                    }
-                }
-            }
-        } catch (Exception ignored) {
-        }
-
-        return null;
     }
 
     public String getState() {

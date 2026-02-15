@@ -5,6 +5,7 @@ import appeng.api.parts.IPartHost;
 import appeng.api.stacks.AEItemKey;
 import com.schematicenergistics.blockentity.CannonInterfaceEntity;
 import com.simibubi.create.AllDataComponents;
+import com.simibubi.create.content.schematics.cannon.MaterialChecklist;
 import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity;
 import com.simibubi.create.content.schematics.cannon.SchematicannonInventory;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
@@ -34,8 +35,8 @@ public abstract class SchematicCannonMixin implements ISchematicAccessor {
     @Shadow
     public SchematicannonInventory inventory;
 
-    // @Shadow
-    // public List<ItemRequirement> checklist; // Replaced with reflection
+     @Shadow
+     public MaterialChecklist checklist;
 
     @Shadow
     public ItemStack missingItem;
@@ -46,50 +47,16 @@ public abstract class SchematicCannonMixin implements ISchematicAccessor {
     @Shadow
     public String statusMsg;
 
+    @Shadow
+    public abstract void updateChecklist();
+
     @Unique
     private CannonInterfaceLogic schematicenergistics$cannonInterface;
 
-    @Unique
-    private static Field schematicenergistics$checklistField;
-
-    @Unique
-    private static boolean schematicenergistics$checklistFieldInitialized = false;
-
     @Override
-    public Object schematicenergistics$getChecklist() {
-        if (!schematicenergistics$checklistFieldInitialized) {
-            try {
-                // Try to find the field by name "checklist"
-                // You might want to add other possible names if "checklist" is not correct
-                Class<?> clazz = SchematicannonBlockEntity.class;
-                Field f = null;
-                try {
-                    f = clazz.getDeclaredField("checklist");
-                } catch (NoSuchFieldException e) {
-                    // Try other names if needed, or iterate fields to find List<ItemRequirement>
-                    // For now, let's assume it might be obfuscated or named differently?
-                    // But usually in 1.21 NeoForge it is "checklist".
-                    // If it fails, we log it.
-                }
-
-                if (f != null) {
-                    f.setAccessible(true);
-                    schematicenergistics$checklistField = f;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            schematicenergistics$checklistFieldInitialized = true;
-        }
-
-        if (schematicenergistics$checklistField != null) {
-            try {
-                return schematicenergistics$checklistField.get(this);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
+    public MaterialChecklist schematicenergistics$getChecklist() {
+        updateChecklist();
+        return checklist;
     }
 
     @Inject(method = { "initializePrinter" }, at = { @At("HEAD") })
