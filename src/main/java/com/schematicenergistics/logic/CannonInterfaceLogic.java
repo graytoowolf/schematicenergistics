@@ -413,6 +413,7 @@ public class CannonInterfaceLogic {
                 setStatusMsg("BULK_CRAFTING");
             }
             if ("STOPPED".equals(state)) {
+                cancelAllPendingCrafts();
                 this.hasPreCrafted = false;
                 this.isPreCrafting = false;
                 this.pendingCraftingJobs.clear();
@@ -424,6 +425,29 @@ public class CannonInterfaceLogic {
                 } else {
                     hasPreCrafted = true;
                 }
+            }
+        }
+    }
+
+    private void cancelAllPendingCrafts() {
+
+        for (Map.Entry<AEItemKey, CraftingHelper> entry : pendingCraftingJobs.entrySet()) {
+            CraftingHelper helper = entry.getValue();
+            if (helper.getLink() != null) {
+                try {
+                    helper.getLink().cancel();
+                } catch (Exception e) {
+                    log.error("Failed to cancel craft link for {}", entry.getKey(), e);
+                }
+                helper.setLink(null);
+            }
+
+            if (helper.getPendingCraft() != null) {
+                helper.clearPendingCraft();
+            }
+
+            if (helper.getReadyPlan() != null) {
+                helper.clearReadyPlan();
             }
         }
     }
