@@ -34,6 +34,7 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
     private boolean gunpowderCraftingState = true; // default
     private boolean craftingState = true;
     private boolean gunpowderState = true;
+    private boolean bulkCraftState = true;
 
     public CannonInterfaceEntity(BlockPos pos, BlockState state) {
         this(Registration.CANNON_INTERFACE_ENTITY.get(), pos, state);
@@ -52,6 +53,7 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
         tag.putBoolean("gunpowderState", this.gunpowderState);
         tag.putBoolean("craftingState", this.craftingState);
         tag.putBoolean("gunpowderCraftingState", this.gunpowderCraftingState);
+        tag.putBoolean("bulkCraftState", this.bulkCraftState);
     }
 
     public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
@@ -59,6 +61,7 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
         this.gunpowderState = tag.getBoolean("gunpowderState");
         this.craftingState = tag.getBoolean("craftingState");
         this.gunpowderCraftingState = tag.getBoolean("gunpowderCraftingState");
+        this.bulkCraftState = tag.getBoolean("bulkCraftState");
     }
 
     public void onReady() {
@@ -85,6 +88,7 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
             this.cannonLogic.setGunpowderState(this.gunpowderState);
             this.cannonLogic.setCraftingState(this.craftingState);
             this.cannonLogic.setGunpowderCraftingState(this.gunpowderCraftingState);
+            this.cannonLogic.setBulkCraftState(this.bulkCraftState);
         }
     }
 
@@ -156,6 +160,12 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
                     this.cannonLogic.setGunpowderCraftingState(state);
                 }
                 break;
+            case "bulkCraftState":
+                this.bulkCraftState = state;
+                if (this.cannonLogic != null) {
+                    this.cannonLogic.setBulkCraftState(state);
+                }
+                break;
             default:
                 throw new IllegalArgumentException("Unknown config type: " + type);
         }
@@ -167,6 +177,7 @@ public class CannonInterfaceEntity extends AENetworkedBlockEntity implements IGr
             case "gunpowderState" -> this.gunpowderState;
             case "craftingState" -> this.craftingState;
             case "gunpowderCraftingState" -> this.gunpowderCraftingState;
+            case "bulkCraftState" -> this.bulkCraftState;
             default -> throw new IllegalArgumentException("Unknown config type: " + type);
         };
     }

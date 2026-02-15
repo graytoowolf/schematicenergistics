@@ -26,12 +26,14 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
     private final SEToggleButton toggleGunpowderCrafting;
     private final SEToggleButton toggleCrafting;
     private final SEToggleButton toggleGunpowder;
+    private final SEToggleButton toggleBulkCraft;
     private SEToggleButton playPause;
     private SESimpleIconButton backButton = null;
 
     private boolean craftingState;
     private boolean gunpowderState;
     private boolean gunpowderCraftingState;
+    private boolean bulkCraftState;
 
     private static final int MAX_TEXT_WIDTH = 164;
 
@@ -48,8 +50,20 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
             this.gunpowderState = CannonInterfaceClientState.getGunpowderState();
             this.craftingState = CannonInterfaceClientState.getCraftingState();
             this.gunpowderCraftingState = CannonInterfaceClientState.getGunpowderCraftingState();
+            this.bulkCraftState = CannonInterfaceClientState.getBulkCraftState();
             CannonInterfaceClientState.reset();
         }
+
+        this.toggleBulkCraft = new SEToggleButton(
+                SEIcon.CRAFTING_ALLOW,
+                SEIcon.CRAFTING_DENY,
+                Component.literal("Disable Bulk Craft"),
+                Component.literal("Disable Bulk Craft. Useful when you don't have enough CPU."),
+                Component.literal("Enable Bulk Craft"),
+                Component.literal("The network will craft all items before allowing Schematicannon to start"),
+                state -> sendState("bulkCraftState", state),
+                bulkCraftState
+        );
 
         this.toggleCrafting = new SEToggleButton(
                 SEIcon.CRAFTING_ALLOW,
@@ -87,6 +101,7 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
                 },
                 gunpowderCraftingState);
 
+        this.addToLeftToolbar(toggleBulkCraft);
         this.addToLeftToolbar(toggleCrafting);
         this.addToLeftToolbar(toggleGunpowder);
         this.addToLeftToolbar(toggleGunpowderCrafting);
@@ -182,7 +197,7 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         }
     }
 
-    public void updateStates(boolean gunpowderState, boolean craftingState, boolean gunpowderCraftingState) {
+    public void updateStates(boolean gunpowderState, boolean craftingState, boolean gunpowderCraftingState, boolean bulkCraftState) {
         this.gunpowderState = gunpowderState;
         this.craftingState = craftingState;
 
@@ -194,6 +209,10 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         }
         if (this.toggleGunpowderCrafting != null) {
             this.toggleGunpowderCrafting.setState(gunpowderCraftingState);
+        }
+
+        if (this.toggleBulkCraft != null) {
+            this.toggleBulkCraft.setState(bulkCraftState);
         }
     }
 

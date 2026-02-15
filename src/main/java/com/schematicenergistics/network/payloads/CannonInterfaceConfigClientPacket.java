@@ -11,13 +11,14 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import com.schematicenergistics.screen.CannonInterfaceScreen;
 
 // Server -> Client
-public record CannonInterfaceConfigClientPacket(boolean gunpowderState, boolean craftingState, boolean gunpowderCraftingState) implements CustomPacketPayload {
+public record CannonInterfaceConfigClientPacket(boolean gunpowderState, boolean craftingState, boolean gunpowderCraftingState, boolean bulkCraftState) implements CustomPacketPayload {
     public static final Type<CannonInterfaceConfigClientPacket> TYPE = new Type<>(SchematicEnergistics.makeId("cannon_state"));
 
     public static final StreamCodec<ByteBuf, CannonInterfaceConfigClientPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.BOOL, CannonInterfaceConfigClientPacket::gunpowderState,
             ByteBufCodecs.BOOL, CannonInterfaceConfigClientPacket::craftingState,
             ByteBufCodecs.BOOL, CannonInterfaceConfigClientPacket::gunpowderCraftingState,
+            ByteBufCodecs.BOOL, CannonInterfaceConfigClientPacket::bulkCraftState,
             CannonInterfaceConfigClientPacket::new
     );
 
@@ -29,9 +30,9 @@ public record CannonInterfaceConfigClientPacket(boolean gunpowderState, boolean 
     public static void handle(CannonInterfaceConfigClientPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             var minecraft = Minecraft.getInstance();
-            CannonInterfaceClientState.setState(packet.gunpowderState(), packet.craftingState(), packet.gunpowderCraftingState());
+            CannonInterfaceClientState.setState(packet.gunpowderState(), packet.craftingState(), packet.gunpowderCraftingState(), packet.bulkCraftState());
             if (minecraft.screen instanceof CannonInterfaceScreen screen) {
-                screen.updateStates(packet.gunpowderState(), packet.craftingState(), packet.gunpowderCraftingState());
+                screen.updateStates(packet.gunpowderState(), packet.craftingState(), packet.gunpowderCraftingState(), packet.bulkCraftState());
             }
         });
     }
