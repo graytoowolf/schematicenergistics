@@ -3,11 +3,18 @@ package com.schematicenergistics.menu;
 import appeng.api.stacks.AEItemKey;
 import appeng.menu.AEBaseMenu;
 import com.schematicenergistics.core.Registration;
+import com.schematicenergistics.lib.MaterialListEntry;
 import com.schematicenergistics.logic.CannonInterfaceLogic;
 import com.schematicenergistics.logic.ICannonInterfaceHost;
+import com.schematicenergistics.network.payloads.MaterialListClientPacket;
+import com.schematicenergistics.util.ISchematicAccessor;
+import com.simibubi.create.content.schematics.cannon.MaterialChecklist;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
 import com.schematicenergistics.network.payloads.CannonInterfaceConfigClientPacket;
@@ -15,10 +22,22 @@ import com.schematicenergistics.network.payloads.CannonInterfaceSyncPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class CannonInterfaceMenu extends AEBaseMenu {
     private static final Logger log = LoggerFactory.getLogger(CannonInterfaceMenu.class);
     private AEItemKey clientItem;
     private ICannonInterfaceHost host;
+
+    private static final int MATERIALS_PAGE_SIZE = 20;
+
+    private boolean materialsSubscribed = false;
+    private int materialsPage = 0;
+    private int materialsRefreshTicks = 0;
 
     public CannonInterfaceMenu(int id, Inventory playerInventory, ICannonInterfaceHost host) {
         super(Registration.CANNON_INTERFACE_MENU.get(), id, playerInventory, host);
@@ -52,9 +71,7 @@ public class CannonInterfaceMenu extends AEBaseMenu {
                             currentGunpowderState,
                             currentCraftingState,
                             currentGunpowderCraftingState,
-                            currentBulkCraftState
-                    )
-            );
+                            currentBulkCraftState));
 
         }
     }
@@ -132,6 +149,19 @@ public class CannonInterfaceMenu extends AEBaseMenu {
         }
     }
 
+    public void setMaterialsSubscribed(boolean subscribed) {
+        this.materialsSubscribed = subscribed;
+        if (subscribed) {
+            this.materialsPage = 0;
+            this.materialsRefreshTicks = 9;
+        }
+    }
+
+    public void setMaterialsPage(int page) {
+        this.materialsPage = Math.max(0, page);
+        this.materialsRefreshTicks = 9;
+    }
+
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
@@ -165,19 +195,146 @@ public class CannonInterfaceMenu extends AEBaseMenu {
                                 name,
                                 statusMsg,
                                 state,
-                                terminal
-                        ));
+                                terminal));
             } else {
                 PacketDistributor.sendToPlayer(player,
                         new CannonInterfaceSyncPacket(
                                 item,
                                 name,
                                 statusMsg,
-                                state
-                        ));
+                                state));
             }
 
+            if (materialsSubscribed) {
+                materialsRefreshTicks++;
+                if (materialsRefreshTicks >= 10) {
+                    materialsRefreshTicks = 0;
+                    sendMaterials(player);
+                }
+            }
         }
+    }
+
+    private void sendMaterials(ServerPlayer player) {
+        List<MaterialListEntry> all = buildMaterialsList();
+        int totalPages = (int) Math.ceil(all.size() / (double) MATERIALS_PAGE_SIZE);
+
+        if (totalPages <= 0) {
+            materialsPage = 0;
+            PacketDistributor.sendToPlayer(player, new MaterialListClientPacket(0, 0, List.of()));
+            return;
+        }
+
+        materialsPage = Math.min(materialsPage, totalPages - 1);
+
+        int from = materialsPage * MATERIALS_PAGE_SIZE;
+        int to = Math.min(from + MATERIALS_PAGE_SIZE, all.size());
+        List<MaterialListEntry> pageEntries = all.subList(from, to);
+
+        PacketDistributor.sendToPlayer(player, new MaterialListClientPacket(materialsPage, totalPages, pageEntries));
+    }
+
+    private List<MaterialListEntry> buildMaterialsList() {
+        var logic = getLogic();
+        if (logic == null) {
+            return List.of();
+        }
+
+        var gridNode = logic.getGridNode();
+        if (gridNode == null || gridNode.getGrid() == null) {
+            return List.of();
+        }
+
+        var grid = gridNode.getGrid();
+        var storage = grid.getStorageService().getInventory();
+        var craftingService = grid.getCraftingService();
+        if (storage == null || craftingService == null) {
+            return List.of();
+        }
+
+        var cannon = logic.getLinkedCannon();
+        if (!(cannon instanceof ISchematicAccessor accessor)) {
+            return List.of();
+        }
+
+        MaterialChecklist checklist = accessor.schematicenergistics$getChecklist();
+        if (checklist == null) {
+            return List.of();
+        }
+
+        Map<AEItemKey, Integer> gathered = new HashMap<>();
+        Map<AEItemKey, Long> required = new HashMap<>();
+
+        for (Object2IntMap.Entry<Item> entry : checklist.required.object2IntEntrySet()) {
+            Item item = entry.getKey();
+            int totalRequired = entry.getIntValue();
+            int alreadyGathered = checklist.gathered.getOrDefault(item, 0);
+            int needed = totalRequired - alreadyGathered;
+            if (needed <= 0) {
+                continue;
+            }
+
+            AEItemKey key = AEItemKey.of(new ItemStack(item));
+            if (key == null) {
+                continue;
+            }
+
+            required.merge(key, (long) needed, Long::sum);
+            gathered.putIfAbsent(key, alreadyGathered);
+        }
+
+        for (Object2IntMap.Entry<Item> entry : checklist.damageRequired.object2IntEntrySet()) {
+            Item item = entry.getKey();
+            int damageAmount = entry.getIntValue();
+
+            ItemStack stack = new ItemStack(item);
+            int maxDamage = stack.getMaxDamage();
+            if (maxDamage <= 0) {
+                continue;
+            }
+
+            int itemsNeeded = (int) Math.ceil(damageAmount / (double) maxDamage);
+            int alreadyGathered = checklist.gathered.getOrDefault(item, 0);
+            itemsNeeded -= alreadyGathered;
+
+            if (itemsNeeded <= 0) {
+                continue;
+            }
+
+            AEItemKey key = AEItemKey.of(stack);
+            if (key == null) {
+                continue;
+            }
+
+            required.merge(key, (long) itemsNeeded, Long::sum);
+            gathered.putIfAbsent(key, alreadyGathered);
+        }
+
+        if (required.isEmpty()) {
+            return List.of();
+        }
+
+        List<MaterialListEntry> entries = new ArrayList<>(required.size());
+        for (Map.Entry<AEItemKey, Long> entry : required.entrySet()) {
+            AEItemKey key = entry.getKey();
+            long needed = entry.getValue();
+            long available = storage.getAvailableStacks().get(key);
+            boolean craftable = craftingService.isCraftable(key);
+            int gatheredCount = gathered.getOrDefault(key, 0);
+            var item = key.toTag(logic.getLevel().registryAccess());
+            entries.add(new MaterialListEntry(item, available, needed, gatheredCount, craftable));
+        }
+
+        entries.sort(Comparator
+                .comparingInt((MaterialListEntry e) -> {
+                    if (e.available() >= e.required()) {
+                        return 2;
+                    }
+                    return e.craftable() ? 1 : 0;
+                })
+                .thenComparingLong(e -> -(e.required() - Math.min(e.available(), e.required()))));
+
+        return entries;
     }
 
 }
