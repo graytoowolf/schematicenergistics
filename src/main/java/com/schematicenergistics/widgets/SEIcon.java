@@ -17,7 +17,9 @@ public enum SEIcon {
     STOP(144, 0),
     BACK(160, 0),
     BULK_CRAFT_DENY(176, 0),
-    BULK_CRAFT_ALLOW(192, 0);
+    BULK_CRAFT_ALLOW(192, 0),
+    MATERIALS(208, 0),
+    CLOSE(224, 0);
 
     public final int x;
     public final int y;

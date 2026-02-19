@@ -33,10 +33,7 @@ public class CannonInterfaceMenu extends AEBaseMenu {
     private AEItemKey clientItem;
     private ICannonInterfaceHost host;
 
-    private static final int MATERIALS_PAGE_SIZE = 20;
-
     private boolean materialsSubscribed = false;
-    private int materialsPage = 0;
     private int materialsRefreshTicks = 0;
 
     public CannonInterfaceMenu(int id, Inventory playerInventory, ICannonInterfaceHost host) {
@@ -152,14 +149,8 @@ public class CannonInterfaceMenu extends AEBaseMenu {
     public void setMaterialsSubscribed(boolean subscribed) {
         this.materialsSubscribed = subscribed;
         if (subscribed) {
-            this.materialsPage = 0;
-            this.materialsRefreshTicks = 9;
+            this.materialsRefreshTicks = 9; // 下一tick立即推送
         }
-    }
-
-    public void setMaterialsPage(int page) {
-        this.materialsPage = Math.max(0, page);
-        this.materialsRefreshTicks = 9;
     }
 
     @Override
@@ -217,21 +208,9 @@ public class CannonInterfaceMenu extends AEBaseMenu {
 
     private void sendMaterials(ServerPlayer player) {
         List<MaterialListEntry> all = buildMaterialsList();
-        int totalPages = (int) Math.ceil(all.size() / (double) MATERIALS_PAGE_SIZE);
-
-        if (totalPages <= 0) {
-            materialsPage = 0;
-            PacketDistributor.sendToPlayer(player, new MaterialListClientPacket(0, 0, List.of()));
-            return;
-        }
-
-        materialsPage = Math.min(materialsPage, totalPages - 1);
-
-        int from = materialsPage * MATERIALS_PAGE_SIZE;
-        int to = Math.min(from + MATERIALS_PAGE_SIZE, all.size());
-        List<MaterialListEntry> pageEntries = all.subList(from, to);
-
-        PacketDistributor.sendToPlayer(player, new MaterialListClientPacket(materialsPage, totalPages, pageEntries));
+        // 直接发全量，客户端用滚动条浏览，不再分页
+        PacketDistributor.sendToPlayer(player,
+                new MaterialListClientPacket(0, 1, all));
     }
 
     private List<MaterialListEntry> buildMaterialsList() {
