@@ -32,13 +32,14 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
     // -----------------------------------------------------------------------
     // 主界面字段
     // -----------------------------------------------------------------------
-    private AEItemKey item;
     private final SEToggleButton toggleGunpowderCrafting;
     private final SEToggleButton toggleCrafting;
     private final SEToggleButton toggleGunpowder;
     private final SEToggleButton toggleBulkCraft;
     private SEToggleButton playPause;
     private SESimpleIconButton backButton = null;
+    private SESimpleIconButton materialsButton = null;
+    private SESimpleIconButton materialsCloseButton = null;
 
     private boolean craftingState;
     private boolean gunpowderState;
@@ -52,8 +53,6 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
     // -----------------------------------------------------------------------
     // 材料清单字段（内嵌于主UI，纯滚动）
     // -----------------------------------------------------------------------
-    // 手绘"材料"按钮区域（在 init 中计算）
-    private Rect2i materialsButtonBounds = new Rect2i(0, 0, 0, 0);
     private boolean materialsOpen = false;
 
     private static final int ROW_HEIGHT    = 20;
@@ -64,7 +63,6 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
 
     // 碰撞区域（每帧重算）
     private Rect2i materialsBounds      = new Rect2i(0, 0, 0, 0);
-    private Rect2i materialsCloseBounds = new Rect2i(0, 0, 0, 0);
 
     private ItemStack hoveredStack = ItemStack.EMPTY;
 
@@ -161,8 +159,22 @@ public class CannonInterfaceScreen extends AEBaseScreen<CannonInterfaceMenu> {
         backButton.visible = (terminal != null);
         this.addRenderableWidget(backButton);
 
-        // 手绘"材料"按钮：宽50，高18，与播放/停止按钮同行左侧
-        materialsButtonBounds = new Rect2i(leftPos + 8, this.topPos + 57, 50, 16);
+        materialsButton = new SESimpleIconButton(
+                SEIcon.MATERIALS,
+                Component.translatable("gui.schematicenergistics.cannon_interface.materials"),
+                Component.empty(),
+                btn -> toggleMaterials());
+        materialsButton.setPosition(leftPos + 8, this.topPos + 56);
+        materialsButton.visible = !materialsOpen;
+        this.addRenderableWidget(materialsButton);
+
+        materialsCloseButton = new SESimpleIconButton(
+                SEIcon.BACK,
+                Component.translatable("gui.schematicenergistics.cannon_interface.close"),
+                Component.empty(),
+                btn -> closeMaterials());
+        materialsCloseButton.visible = materialsOpen;
+        this.addRenderableWidget(materialsCloseButton);
     }
 
     // -----------------------------------------------------------------------
@@ -196,54 +208,16 @@ public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
 
     hoveredStack = ItemStack.EMPTY;
 
-    if (!materialsOpen) {
-        renderMaterialsButton(gfx, mouseX, mouseY);
-    }
-
     if (materialsOpen) {
         renderMaterialsPanel(gfx, mouseX, mouseY);
+        if (materialsCloseButton != null) {
+            materialsCloseButton.render(gfx, mouseX, mouseY, partialTick);
+        }
         if (!hoveredStack.isEmpty()) {
             gfx.renderTooltip(this.font, hoveredStack, mouseX, mouseY);
         }
     }
 }
-
-    /**
-     * 手绘"材料"按钮，风格与 AE2 GUI 元素一致：
-     * 凹凸感边框 + 浅灰背景，hover 时高亮。
-     */
-    private void renderMaterialsButton(GuiGraphics gfx, int mouseX, int mouseY) {
-        int x = materialsButtonBounds.getX();
-        int y = materialsButtonBounds.getY();
-        int w = materialsButtonBounds.getWidth();
-        int h = materialsButtonBounds.getHeight();
-
-        boolean hover = contains(materialsButtonBounds, mouseX, mouseY) && !materialsOpen;
-
-        // 外框 - 深色
-        gfx.fill(x, y, x + w, y + h, 0xFF373737);
-        // 内填充
-        int bg = hover ? 0xFFB8BAC0 : (materialsOpen ? 0xFF9A9CA4 : 0xFFA8AAB2);
-        gfx.fill(x + 1, y + 1, x + w - 1, y + h - 1, bg);
-        // 高光边（左上亮，右下暗，模拟 AE2 凹陷感）
-        if (!materialsOpen) {
-            gfx.fill(x + 1, y + 1, x + w - 1, y + 2, 0xFFD0D2D8); // 顶部高光
-            gfx.fill(x + 1, y + 1, x + 2, y + h - 1, 0xFFD0D2D8); // 左侧高光
-            gfx.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0xFF808288); // 底部暗边
-            gfx.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, 0xFF808288); // 右侧暗边
-        } else {
-            // 按下状态：凹陷，高光暗边互换
-            gfx.fill(x + 1, y + 1, x + w - 1, y + 2, 0xFF606268);
-            gfx.fill(x + 1, y + 1, x + 2, y + h - 1, 0xFF606268);
-        }
-
-        // 文字居中
-        String label = Component.translatable("gui.schematicenergistics.cannon_interface.materials").getString();
-        int labelW = this.font.width(label);
-        int labelX = x + (w - labelW) / 2;
-        int labelY = y + (h - 7) / 2;
-        gfx.drawString(this.font, label, labelX, labelY, materialsOpen ? 0xFFFFFFFF : 0xFF202020, false);
-    }
 
     // -----------------------------------------------------------------------
     // 输入事件
@@ -251,7 +225,7 @@ public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (materialsOpen) {
-            if (contains(materialsCloseBounds, mouseX, mouseY)) {
+            if (materialsCloseButton != null && materialsCloseButton.isMouseOver(mouseX, mouseY)) {
                 closeMaterials();
                 return true;
             }
@@ -260,12 +234,6 @@ public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
             }
             // 点击面板外：关闭面板，事件继续传递
             return super.mouseClicked(mouseX, mouseY, button);
-        }
-
-        // 材料按钮点击
-        if (contains(materialsButtonBounds, mouseX, mouseY)) {
-            toggleMaterials();
-            return true;
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
@@ -338,8 +306,6 @@ public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
 
     public void updateScreenItem(CompoundTag data, String schematicName, String statusMsg,
             String state, BlockPos terminalPos) {
-        var item = AEItemKey.fromTag(menu.getLogic().getLevel().registryAccess(), data);
-        this.item     = item != null ? item : AEItemKey.of(ItemStack.EMPTY);
         this.terminal = terminalPos;
         if (backButton != null) backButton.visible = (terminal != null);
         updateSchematicName(schematicName);
@@ -374,6 +340,14 @@ public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
 
         materialsBounds = new Rect2i(panelX, panelY, panelW, panelH);
 
+        // 设置关闭按钮位置
+        if (materialsCloseButton != null) {
+            int closeSize = 16;
+            int closeX    = panelX + panelW - 2 - closeSize;
+            int closeY    = panelY - 2 - (HEADER_H - closeSize) / 2;
+            materialsCloseButton.setPosition(closeX, closeY);
+        }
+
         // ── 背景：与 AE2 GUI 纹理风格一致的深灰+浅灰双层 ──────────────
         gfx.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xFF373737);
         gfx.fill(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + panelH - 1, 0xFF6B7280);
@@ -387,23 +361,6 @@ public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
         String title = Component.translatable(
                 "gui.schematicenergistics.cannon_interface.materials_title").getString();
         gfx.drawString(this.font, title, panelX + 6, panelY + 6, 0xFF202020, false);
-
-        // ── 关闭按钮（AE2 风格小方块） ────────────────────────────────────
-        int closeSize = 12;
-        int closeX    = panelX + panelW - 2 - closeSize;
-        int closeY    = panelY + 2 + (HEADER_H - closeSize) / 2;
-        materialsCloseBounds = new Rect2i(closeX, closeY, closeSize, closeSize);
-        boolean closeHover   = contains(materialsCloseBounds, mouseX, mouseY);
-
-        gfx.fill(closeX, closeY, closeX + closeSize, closeY + closeSize, 0xFF373737);
-        int closeBg = closeHover ? 0xFFCC3333 : 0xFFB0B2BA;
-        gfx.fill(closeX + 1, closeY + 1, closeX + closeSize - 1, closeY + closeSize - 1, closeBg);
-        if (!closeHover) {
-            gfx.fill(closeX + 1, closeY + 1, closeX + closeSize - 1, closeY + 2, 0xFFD0D2D8);
-            gfx.fill(closeX + 1, closeY + 1, closeX + 2, closeY + closeSize - 1, 0xFFD0D2D8);
-        }
-        int xColor = closeHover ? 0xFFFFFFFF : 0xFF404040;
-        gfx.drawString(this.font, "x", closeX + 3, closeY + 3, xColor, false);
 
         // ── 动态计算列表区域 ──────────────────────────────────────────────
         int listPad = 4;
@@ -483,11 +440,15 @@ public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
     private void openMaterials() {
         materialsOpen   = true;
         materialsScroll = 0;
+        if (materialsButton != null) materialsButton.visible = false;
+        if (materialsCloseButton != null) materialsCloseButton.visible = true;
         PacketDistributor.sendToServer(new MaterialListSubscribePacket(true));
     }
 
     private void closeMaterials() {
         materialsOpen = false;
+        if (materialsButton != null) materialsButton.visible = true;
+        if (materialsCloseButton != null) materialsCloseButton.visible = false;
         PacketDistributor.sendToServer(new MaterialListSubscribePacket(false));
     }
 
